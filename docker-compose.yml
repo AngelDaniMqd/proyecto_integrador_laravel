@@ -35,11 +35,11 @@ services:
     ports:
       - "37363:3306"
     environment:
-      MYSQL_ROOT_HOST: tramway.proxy.rlwy.net
-      MYSQL_ROOT_PASSWORD: yVGgKKIBJFzywXjoNCHlwajixTJiWlGJ
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_ROOT_PASSWORD: 'root'
       MYSQL_DATABASE: sustainitypi
       MYSQL_USER: root
-      MYSQL_PASSWORD: yVGgKKIBJFzywXjoNCHlwajixTJiWlGJ
+      MYSQL_PASSWORD: 'root'
     volumes:
       - dbdata:/var/lib/mysql
     networks:
