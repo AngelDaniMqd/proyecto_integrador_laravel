@@ -23,12 +23,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Dependencias PHP
-COPY composer.json composer.lock ./
+# Primero copia TODO el código (incluido artisan)
+COPY . .
+
+# Luego instala dependencias PHP (ahora artisan existe)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Copia código y assets compilados
-COPY . .
+# Copia los assets compilados desde el stage de Node
 COPY --from=node-builder /app/public/build public/build
 
 # Permisos
@@ -37,8 +38,4 @@ RUN chown -R www-data:www-data storage bootstrap/cache \
 
 EXPOSE 80
 
-CMD ["bash","-lc","php artisan migrate --force \
-  && php artisan config:cache \
-  && php artisan route:cache \
-  && php artisan view:cache \
-  && apache2-foreground"]
+CMD ["bash", "-c", "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && apache2-foreground"]
