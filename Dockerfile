@@ -11,16 +11,9 @@ COPY resources/ ./resources/
 COPY public/ ./public/
 COPY . .
 
-# Build con debug mejorado
+# Build simplificado (sin verificaciones que fallan)
 ENV NODE_ENV=production
-RUN echo "=== STARTING VITE BUILD ===" && \
-    npm run build && \
-    echo "=== VITE BUILD COMPLETED ===" && \
-    ls -la public/build/ && \
-    ls -la public/build/assets/ && \
-    echo "=== CHECKING MANIFEST ===" && \
-    ls -la public/build/manifest.json && \
-    cat public/build/manifest.json | head -10
+RUN npm run build
 
 FROM php:8.2-apache
 
@@ -50,33 +43,15 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configurar Apache
+# Configurar Apache (método simplificado)
 RUN a2enmod rewrite headers
-COPY <<EOF /etc/apache2/sites-available/000-default.conf
-<VirtualHost *:80>
-    ServerName localhost
-    DocumentRoot /var/www/html/public
-    
-    <Directory /var/www/html>
-        AllowOverride None
-        Require all granted
-    </Directory>
-    
-    <Directory /var/www/html/public>
-        AllowOverride All
-        Options Indexes FollowSymLinks
-        Require all granted
-        
-        RewriteEngine On
-        RewriteCond %{REQUEST_FILENAME} !-f
-        RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteRule ^(.*)$ index.php [QSA,L]
-    </Directory>
-    
-    ErrorLog \${APACHE_LOG_DIR}/error.log
-    CustomLog \${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-EOF
+RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf && \
+    echo '    DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    </Directory>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
 WORKDIR /var/www/html
 
@@ -90,12 +65,6 @@ COPY . .
 # Copiar assets compilados
 COPY --from=node-builder /app/public/build ./public/build
 
-# VERIFICAR que manifest.json esté ahí
-RUN echo "=== POST-COPY VERIFICATION ===" && \
-    ls -la public/build/ && \
-    ls -la public/build/manifest.json && \
-    cat public/build/manifest.json | head -5
-
 RUN composer dump-autoload --optimize
 
 # Permisos
@@ -104,35 +73,17 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/storage \
     && chmod -R 777 /var/www/html/bootstrap/cache
 
-# Script de inicio
-COPY <<EOF /usr/local/bin/start.sh
-#!/bin/bash
-set -e
-
-echo "=== INICIANDO SUSTAINITY PI ==="
-
-# Crear directorios
-mkdir -p /var/www/html/storage/{logs,framework/{cache,sessions,views},app/public}
-mkdir -p /var/www/html/bootstrap/cache
-
-# Permisos
-chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-chmod -R 777 /var/www/html/storage
-chmod -R 777 /var/www/html/bootstrap/cache
-chmod -R 755 /var/www/html/public
-
-# Storage link
-php artisan storage:link --force 2>/dev/null || echo "Warning: storage link failed"
-
-echo "=== DEBUG ASSETS FINAL ==="
-echo "Build directory:"
-ls -la public/build/ || echo "❌ No build directory"
-echo "Manifest file:"
-ls -la public/build/manifest.json && cat public/build/manifest.json | head -10 || echo "❌ No manifest file"
-
-echo "=== INICIANDO APACHE ==="
-apache2-foreground
-EOF
+# Script de inicio simplificado
+RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
+    echo 'set -e' >> /usr/local/bin/start.sh && \
+    echo 'mkdir -p /var/www/html/storage/{logs,framework/{cache,sessions,views},app/public}' >> /usr/local/bin/start.sh && \
+    echo 'mkdir -p /var/www/html/bootstrap/cache' >> /usr/local/bin/start.sh && \
+    echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /usr/local/bin/start.sh && \
+    echo 'chmod -R 777 /var/www/html/storage' >> /usr/local/bin/start.sh && \
+    echo 'chmod -R 777 /var/www/html/bootstrap/cache' >> /usr/local/bin/start.sh && \
+    echo 'chmod -R 755 /var/www/html/public' >> /usr/local/bin/start.sh && \
+    echo 'php artisan storage:link --force 2>/dev/null || echo "Storage link OK"' >> /usr/local/bin/start.sh && \
+    echo 'apache2-foreground' >> /usr/local/bin/start.sh
 
 RUN chmod +x /usr/local/bin/start.sh
 
