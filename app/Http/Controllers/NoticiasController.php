@@ -10,28 +10,26 @@ class NoticiasController extends Controller
     public function index()
     {
         try {
-            // Obtener noticias de la base de datos local
-            $news = DB::table('news_posts')
+            // Obtener noticias desde tbposts (no news_posts)
+            $news = DB::table('tbposts')
                 ->select('id', 'title', 'description', 'image', 'likes', 'dislikes', 'created_at')
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->map(function ($item) {
+                ->map(function ($post) {
                     return [
-                        'id' => $item->id,
-                        'title' => $item->title,
-                        'description' => $item->description,
-                        'image' => $item->image,
-                        'likes' => $item->likes ?? 0,
-                        'dislikes' => $item->dislikes ?? 0,
-                        'created_at' => $item->created_at
+                        'id' => $post->id,
+                        'title' => $post->title,
+                        'description' => $post->description,
+                        'image' => $post->image ? base64_encode($post->image) : null,
+                        'likes' => $post->likes ?? 0,
+                        'dislikes' => $post->dislikes ?? 0,
+                        'created_at' => $post->created_at
                     ];
-                })->toArray();
+                });
 
             return view('Noticias', compact('news'));
         } catch (\Exception $e) {
-            // Si hay error, mostrar vista con array vacío
-            $news = [];
-            return view('Noticias', compact('news'));
+            return view('Noticias', ['news' => [], 'error' => $e->getMessage()]);
         }
     }
 
@@ -39,49 +37,62 @@ class NoticiasController extends Controller
     {
         try {
             $userId = $request->input('user_id') ?? session('user_id');
-            
-            // Verificar si ya existe el like
-            $existingLike = DB::table('post_likes')
+
+            if (!$userId) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+
+            // Verificar si el usuario ya dio like
+            $existingLike = DB::table('tbnewslikes')
                 ->where('post_id', $postId)
                 ->where('user_id', $userId)
                 ->first();
 
-            if ($existingLike) {
-                // Eliminar like
-                DB::table('post_likes')
-                    ->where('post_id', $postId)
-                    ->where('user_id', $userId)
-                    ->delete();
-                
-                // Decrementar contador
-                DB::table('news_posts')
-                    ->where('id', $postId)
-                    ->decrement('likes');
-            } else {
-                // Eliminar dislike si existe
-                DB::table('post_dislikes')
-                    ->where('post_id', $postId)
-                    ->where('user_id', $userId)
-                    ->delete();
-                
-                DB::table('news_posts')
-                    ->where('id', $postId)
-                    ->decrement('dislikes');
-
+            if ($request->method() === 'POST') {
                 // Agregar like
-                DB::table('post_likes')->insert([
-                    'post_id' => $postId,
-                    'user_id' => $userId,
-                    'created_at' => now()
-                ]);
-                
-                // Incrementar contador
-                DB::table('news_posts')
-                    ->where('id', $postId)
-                    ->increment('likes');
+                if (!$existingLike) {
+                    // Remover dislike si existe
+                    DB::table('tbnewsdislikes')
+                        ->where('post_id', $postId)
+                        ->where('user_id', $userId)
+                        ->delete();
+
+                    // Agregar like
+                    DB::table('tbnewslikes')->insert([
+                        'post_id' => $postId,
+                        'user_id' => $userId,
+                        'created_at' => now()
+                    ]);
+
+                    // Actualizar contador en tbposts
+                    DB::table('tbposts')
+                        ->where('id', $postId)
+                        ->increment('likes');
+
+                    // Decrementar dislikes si había
+                    $post = DB::table('tbposts')->where('id', $postId)->first();
+                    if ($post && $post->dislikes > 0) {
+                        DB::table('tbposts')
+                            ->where('id', $postId)
+                            ->decrement('dislikes');
+                    }
+                }
+            } else {
+                // Remover like (DELETE)
+                if ($existingLike) {
+                    DB::table('tbnewslikes')
+                        ->where('post_id', $postId)
+                        ->where('user_id', $userId)
+                        ->delete();
+
+                    // Decrementar contador
+                    DB::table('tbposts')
+                        ->where('id', $postId)
+                        ->decrement('likes');
+                }
             }
 
-            return response()->json(['message' => 'Success']);
+            return response()->json(['message' => 'Acción completada']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -91,49 +102,62 @@ class NoticiasController extends Controller
     {
         try {
             $userId = $request->input('user_id') ?? session('user_id');
-            
-            // Verificar si ya existe el dislike
-            $existingDislike = DB::table('post_dislikes')
+
+            if (!$userId) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+
+            // Verificar si el usuario ya dio dislike
+            $existingDislike = DB::table('tbnewsdislikes')
                 ->where('post_id', $postId)
                 ->where('user_id', $userId)
                 ->first();
 
-            if ($existingDislike) {
-                // Eliminar dislike
-                DB::table('post_dislikes')
-                    ->where('post_id', $postId)
-                    ->where('user_id', $userId)
-                    ->delete();
-                
-                // Decrementar contador
-                DB::table('news_posts')
-                    ->where('id', $postId)
-                    ->decrement('dislikes');
-            } else {
-                // Eliminar like si existe
-                DB::table('post_likes')
-                    ->where('post_id', $postId)
-                    ->where('user_id', $userId)
-                    ->delete();
-                
-                DB::table('news_posts')
-                    ->where('id', $postId)
-                    ->decrement('likes');
-
+            if ($request->method() === 'POST') {
                 // Agregar dislike
-                DB::table('post_dislikes')->insert([
-                    'post_id' => $postId,
-                    'user_id' => $userId,
-                    'created_at' => now()
-                ]);
-                
-                // Incrementar contador
-                DB::table('news_posts')
-                    ->where('id', $postId)
-                    ->increment('dislikes');
+                if (!$existingDislike) {
+                    // Remover like si existe
+                    DB::table('tbnewslikes')
+                        ->where('post_id', $postId)
+                        ->where('user_id', $userId)
+                        ->delete();
+
+                    // Agregar dislike
+                    DB::table('tbnewsdislikes')->insert([
+                        'post_id' => $postId,
+                        'user_id' => $userId,
+                        'created_at' => now()
+                    ]);
+
+                    // Actualizar contador en tbposts
+                    DB::table('tbposts')
+                        ->where('id', $postId)
+                        ->increment('dislikes');
+
+                    // Decrementar likes si había
+                    $post = DB::table('tbposts')->where('id', $postId)->first();
+                    if ($post && $post->likes > 0) {
+                        DB::table('tbposts')
+                            ->where('id', $postId)
+                            ->decrement('likes');
+                    }
+                }
+            } else {
+                // Remover dislike (DELETE)
+                if ($existingDislike) {
+                    DB::table('tbnewsdislikes')
+                        ->where('post_id', $postId)
+                        ->where('user_id', $userId)
+                        ->delete();
+
+                    // Decrementar contador
+                    DB::table('tbposts')
+                        ->where('id', $postId)
+                        ->decrement('dislikes');
+                }
             }
 
-            return response()->json(['message' => 'Success']);
+            return response()->json(['message' => 'Acción completada']);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -142,11 +166,11 @@ class NoticiasController extends Controller
     public function getComments($postId)
     {
         try {
-            $comments = DB::table('post_comments')
-                ->join('tbusers', 'post_comments.user_id', '=', 'tbusers.id') // Cambiar usuarios por tbusers
-                ->where('post_comments.post_id', $postId)
-                ->select('post_comments.*', 'tbusers.username')
-                ->orderBy('post_comments.created_at', 'desc')
+            $comments = DB::table('tbcomments')
+                ->join('tbusers', 'tbcomments.user_id', '=', 'tbusers.id')
+                ->where('tbcomments.post_id', $postId)
+                ->select('tbcomments.*', 'tbusers.username')
+                ->orderBy('tbcomments.created_at', 'desc')
                 ->get()
                 ->map(function ($comment) {
                     return [
@@ -186,7 +210,7 @@ class NoticiasController extends Controller
             }
 
             // ANTI-SPAM: Verificar último comentario del usuario (cooldown de 30 segundos)
-            $lastComment = DB::table('post_comments')
+            $lastComment = DB::table('tbcomments')
                 ->where('user_id', $userId)
                 ->orderBy('created_at', 'desc')
                 ->first();
@@ -204,7 +228,7 @@ class NoticiasController extends Controller
 
             // ANTI-SPAM: Verificar límite de comentarios por hora (máximo 10)
             $hourAgo = date('Y-m-d H:i:s', strtotime('-1 hour'));
-            $commentsInLastHour = DB::table('post_comments')
+            $commentsInLastHour = DB::table('tbcomments')
                 ->where('user_id', $userId)
                 ->where('created_at', '>=', $hourAgo)
                 ->count();
@@ -215,7 +239,7 @@ class NoticiasController extends Controller
 
             // ANTI-SPAM: Verificar comentarios duplicados en los últimos 5 minutos
             $fiveMinutesAgo = date('Y-m-d H:i:s', strtotime('-5 minutes'));
-            $duplicateComment = DB::table('post_comments')
+            $duplicateComment = DB::table('tbcomments')
                 ->where('user_id', $userId)
                 ->where('post_id', $postId)
                 ->where('description', $description)
@@ -226,32 +250,81 @@ class NoticiasController extends Controller
                 return response()->json(['error' => 'No puedes publicar el mismo comentario repetidamente'], 400);
             }
 
-            // ANTI-SPAM: Verificar comentarios muy similares (básico)
-            $similarComment = DB::table('post_comments')
-                ->where('user_id', $userId)
-                ->where('post_id', $postId)
-                ->where('created_at', '>=', $fiveMinutesAgo)
-                ->get();
-
-            foreach ($similarComment as $comment) {
-                $similarity = $this->calculateSimilarity($description, $comment->description);
-                if ($similarity > 0.8) { // 80% de similitud
-                    return response()->json(['error' => 'No puedes publicar comentarios muy similares'], 400);
-                }
-            }
-
             // Si pasa todas las validaciones, insertar el comentario
-            DB::table('post_comments')->insert([
+            // SOLO usar las columnas que existen en la tabla
+            DB::table('tbcomments')->insert([
                 'post_id' => $postId,
                 'user_id' => $userId,
                 'description' => trim($description),
-                'created_at' => now(),
-                'updated_at' => now()
+                'created_at' => now()
+                // Remover 'updated_at' porque no existe en la tabla
             ]);
 
             return response()->json(['message' => 'Comentario publicado exitosamente']);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error del servidor: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function updateComment(Request $request, $commentId)
+    {
+        try {
+            $userId = session('user_id');
+            $description = $request->input('description');
+
+            if (!$userId) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+
+            // Verificar que el comentario pertenece al usuario
+            $comment = DB::table('tbcomments')
+                ->where('id', $commentId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$comment) {
+                return response()->json(['error' => 'Comentario no encontrado o no autorizado'], 404);
+            }
+
+            // Actualizar comentario - solo description sin updated_at
+            DB::table('tbcomments')
+                ->where('id', $commentId)
+                ->update([
+                    'description' => trim($description)
+                    // Remover 'updated_at' porque no existe en la tabla
+                ]);
+
+            return response()->json(['message' => 'Comentario actualizado']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteComment($commentId)
+    {
+        try {
+            $userId = session('user_id');
+
+            if (!$userId) {
+                return response()->json(['error' => 'Usuario no autenticado'], 401);
+            }
+
+            // Verificar que el comentario pertenece al usuario
+            $comment = DB::table('tbcomments')
+                ->where('id', $commentId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$comment) {
+                return response()->json(['error' => 'Comentario no encontrado o no autorizado'], 404);
+            }
+
+            // Eliminar comentario
+            DB::table('tbcomments')->where('id', $commentId)->delete();
+
+            return response()->json(['message' => 'Comentario eliminado']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -269,36 +342,5 @@ class NoticiasController extends Controller
         $percent = 0;
         similar_text($text1, $text2, $percent);
         return $percent / 100;
-    }
-
-    public function updateComment(Request $request, $commentId)
-    {
-        try {
-            $description = $request->input('description');
-
-            DB::table('post_comments')
-                ->where('id', $commentId)
-                ->update([
-                    'description' => $description,
-                    'updated_at' => now()
-                ]);
-
-            return response()->json(['message' => 'Comentario actualizado']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    public function deleteComment($commentId)
-    {
-        try {
-            DB::table('post_comments')
-                ->where('id', $commentId)
-                ->delete();
-
-            return response()->json(['message' => 'Comentario eliminado']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
     }
 }

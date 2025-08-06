@@ -166,120 +166,461 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #2a2a2a; /* Fondo oscuro en vez de blanco */
-    color: #fff; /* Texto blanco */
-    z-index: 1000;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    max-width: 600px;
-    width: 90%;
+    background: #2a2a2a;
+    border: 3px solid #ffcb05;
     border-radius: 10px;
+    padding: 0; /* Sin padding general, lo manejamos por secciones */
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden; /* Evitar scroll en el modal principal */
+    z-index: 1001;
     display: none;
+    font-family: 'Press Start 2P', cursive;
+    box-sizing: border-box;
 }
 
-#commentsModal h2 {
-    margin-top: 0;
-    color: #ffa500;
-}
-
-/* Encabezado del modal: coloca el título a la izquierda y el botón de cerrar a la derecha */
-#commentsModal .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-/* Botón de cerrar estilo X roja */
-#modalCloseBtn {
-  background: red;
-  color: white;
-  border: none;
-  font-size: 1.5em;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  cursor: pointer;
-  /* Se elimina la posición absolute para que se adapte al flex container */
-}
-
-/* Overlay del modal */
-#modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-    display: none;
-}
-
-/* Estilos para cada comentario en el modal */
-.comment-item {
-    background-color: #3a3a3a; /* Fondo gris oscuro */
-    border: 1px solid #555;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
-    color: #fff;
-}
-.comment-item p {
-    margin-bottom: 5px;
-    font-size: 0.9em;
-}
-.comment-item small {
-    font-size: 0.6em; /* Ajusta este valor según lo pequeño que desees */
-    color: #ccc;
-}
-
-.text-content {
+/* Header del modal con título y botón cerrar */
+.modal-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    text-align: center;
-    width: 100%;
+    padding: 15px 20px;
+    background: #ffcb05;
+    color: #000;
+    border-radius: 7px 7px 0 0;
+    border-bottom: 2px solid #ff5722;
 }
 
-.text-content-left {
-    max-width: 50%;
-    z-index: 1;
-    text-align: center;
+.modal-header h2 {
+    margin: 0;
+    font-size: 0.8em;
+    font-family: 'Press Start 2P', cursive;
 }
 
-.play-btn {
-    padding: 12px 24px;
-    font-size: 1em;
-    background-color: #ff5722;
+/* Botón X para cerrar */
+#modalCloseBtn {
+    background: #ff5722;
     color: #fff;
     border: none;
-    border-radius: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 1.2em;
+    font-weight: bold;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    font-family: Arial, sans-serif; /* Para que la X se vea bien */
+}
+
+#modalCloseBtn:hover {
+    background: #d32f2f;
+    transform: scale(1.1);
+}
+
+/* Contenido del modal */
+.modal-content {
+    padding: 20px;
+    max-height: calc(80vh - 80px); /* Altura disponible menos header */
+    overflow-y: auto;
+}
+
+/* Lista de comentarios con scroll interno */
+#modalCommentsList {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding-right: 10px;
+}
+
+/* Comentarios individuales con menú de opciones */
+.comment-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid #ffcb05;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.comment-item p {
+    margin: 0 0 5px 0;
+    font-size: 0.7em;
+    line-height: 1.4;
+    word-break: break-word;
+    padding-right: 30px; /* Espacio para el menú */
+}
+
+.comment-item small {
+    font-size: 0.5em;
+    color: #ffcb05;
+    opacity: 0.8;
+}
+
+/* Menú de 3 puntos para opciones */
+.comment-options {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+.comment-menu-btn {
+    background: none;
+    border: none;
+    color: #ffcb05;
+    font-size: 1em;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 3px;
     transition: background-color 0.3s;
 }
 
-.play-btn:hover {
-    background-color: #e64a19;
+.comment-menu-btn:hover {
+    background: rgba(255, 203, 5, 0.2);
 }
 
-.character-image {
+/* Dropdown del menú de comentarios */
+.comment-dropdown {
     position: absolute;
-    right: -80px;
-    top: -150px;
-    width: 500px;
-    height: auto;
-    z-index: 2;
-    transform: rotate(10deg);
-    image-rendering: pixelated;
+    top: 25px;
+    right: 0;
+    background: #2a2a2a;
+    border: 2px solid #ffcb05;
+    border-radius: 5px;
+    display: none;
+    z-index: 1002;
+    min-width: 120px;
 }
 
-@keyframes fadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
+.comment-dropdown button {
+    width: 100%;
+    background: none;
+    border: none;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 0.6em;
+    font-family: 'Press Start 2P', cursive;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.3s;
+}
+
+.comment-dropdown button:hover {
+    background: #ffcb05;
+    color: #000;
+}
+
+.comment-dropdown button:first-child {
+    border-radius: 3px 3px 0 0;
+}
+
+.comment-dropdown button:last-child {
+    border-radius: 0 0 3px 3px;
+}
+
+/* Textarea del modal - LIMITADO */
+#modalNewComment {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 80px !important;
+    max-height: 120px !important;
+    min-height: 60px !important;
+    resize: vertical !important;
+    box-sizing: border-box !important;
+    padding: 10px !important;
+    border: 2px solid #ffcb05 !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    font-family: 'Press Start 2P', cursive !important;
+    font-size: 0.7em !important;
+    border-radius: 5px !important;
+    margin: 10px 0 !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    overflow-y: auto !important;
+}
+
+/* Contenedor del textarea */
+.modal-textarea-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    margin: 10px 0;
+}
+
+/* Botón de publicar comentario */
+#modalPostCommentBtn {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px;
+    background: #ff5722;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.7em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+#modalPostCommentBtn:hover {
+    background: #e64a19;
+}
+
+#modalPostCommentBtn:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+/* RESPONSIVE DESIGN - MÓVIL */
+@media (max-width: 768px) {
+    /* Navbar móvil - EXACTAMENTE COMO EN LOS OTROS CSS */
+    .navbar {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+        height: auto;
+    }
+    
+    .navbar-left {
+        margin-bottom: 10px;
+    }
+    
+    .logo-image {
+        height: 40px;
+    }
+    
+    .small-logo {
+        height: 60px;
+    }
+    
+    .navbar-center {
+        gap: 15px;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .navbar-center a {
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+    
+    .navbar-right {
+        gap: 10px;
+        margin-right: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .login-btn, .news-btn {
+        padding: 8px 15px;
+        font-size: 0.7em;
+    }
+    
+    /* User info móvil */
+    .user-info {
+        margin-right: 0;
+        margin-top: 0;
+    }
+    
+    .username {
+        font-size: 0.8em;
+        padding: 10px;
+    }
+    
+    .logout-dropdown {
+        right: -10px;
+    }
+    
+    /* Contenido principal móvil */
+    body {
+        margin-top: 100px; /* Más espacio en móvil porque la navbar es más alta */
+    }
+    
+    .news-container {
+        padding: 15px;
+        margin-top: 20px;
+    }
+    
+    .main-card {
+        margin-top: 20px;
+        padding: 30px 20px;
+    }
+    
+    /* Modal responsivo */
+    #commentsModal {
+        width: 95%;
+        max-height: 85vh;
+    }
+    
+    .modal-header {
+        padding: 12px 15px;
+    }
+    
+    .modal-header h2 {
+        font-size: 0.7em;
+    }
+    
+    #modalCloseBtn {
+        width: 25px;
+        height: 25px;
+        font-size: 1em;
+    }
+    
+    .modal-content {
+        padding: 15px;
+    }
+    
+    #modalNewComment {
+        height: 70px !important;
+        font-size: 0.6em !important;
+        padding: 8px !important;
+    }
+    
+    #modalCommentsList {
+        max-height: 250px;
+    }
+    
+    .comment-item {
+        padding: 8px;
+    }
+    
+    .comment-item p {
+        font-size: 0.6em;
+        padding-right: 25px;
+    }
+    
+    .comment-item small {
+        font-size: 0.45em;
+    }
+    
+    #modalPostCommentBtn {
+        font-size: 0.6em;
+        padding: 10px;
+    }
+    
+    .edit-comment-btn {
+        width: 25px !important;
+        height: 25px !important;
+        font-size: 1em !important;
+        padding: 2px 4px !important;
+    }
+    
+    .comment-dropdown {
+        min-width: 120px !important;
+        top: 30px !important;
+    }
+    
+    .dropdown-item {
+        font-size: 0.6em !important;
+        padding: 10px 12px !important;
     }
 }
 
+@media (max-width: 480px) {
+    /* Ajustes para pantallas muy pequeñas */
+    .navbar-center a {
+        font-size: 0.6em;
+    }
+    
+    .login-btn, .news-btn {
+        font-size: 0.6em;
+        padding: 6px 12px;
+    }
+    
+    .main-card {
+        padding: 20px 15px;
+        margin-top: 10px;
+    }
+    
+    .news-title {
+        font-size: 1.4rem;
+    }
+    
+    .news-description {
+        font-size: 0.9rem;
+    }
+    
+    .news-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .like-btn, .dislike-btn, .toggle-comments-btn {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Modal en pantallas muy pequeñas */
+    #commentsModal {
+        width: 98%;
+    }
+    
+    .modal-header h2 {
+        font-size: 0.6em;
+    }
+    
+    #modalCloseBtn {
+        width: 22px;
+        height: 22px;
+        font-size: 0.9em;
+    }
+    
+    #modalNewComment {
+        height: 60px !important;
+        font-size: 0.55em !important;
+    }
+    
+    .comment-item p {
+        font-size: 0.55em;
+    }
+    
+    .comment-item small {
+        font-size: 0.4em;
+    }
+    
+    #modalPostCommentBtn {
+        font-size: 0.55em;
+    }
+}
+
+/* Ajuste extra para móviles muy pequeños */
+@media (max-width: 360px) {
+    .navbar-center a,
+    .login-btn, .news-btn {
+        font-size: 0.5em;
+    }
+    
+    .main-card {
+        padding: 15px 10px;
+    }
+    
+    .news-title {
+        font-size: 1.2rem;
+    }
+    
+    .news-description {
+        font-size: 0.8rem;
+    }
+    
+    .username {
+        font-size: 0.7em;
+        padding: 8px;
+    }
+}
 .footer {
     width: 100%;
     background-color: #111;

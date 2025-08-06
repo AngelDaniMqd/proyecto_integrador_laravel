@@ -210,3 +210,76 @@ Route::delete('/news/comments/{commentId}', [NoticiasController::class, 'deleteC
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }); */
+
+// Ruta temporal para insertar datos de prueba en tbposts (eliminar después)
+Route::get('/test-insert-news', function() {
+    try {
+        // Verificar primero qué columnas tiene la tabla tbposts
+        $columns = DB::select("DESCRIBE tbposts");
+        $hasUpdatedAt = collect($columns)->pluck('Field')->contains('updated_at');
+        
+        // Preparar datos base
+        $baseData = [
+            'title' => 'Primera Noticia de Prueba',
+            'description' => 'Esta es una descripción de prueba para la primera noticia del sistema.',
+            'image' => null,
+            'likes' => 5,
+            'dislikes' => 1,
+            'created_at' => now()->subDays(2)
+        ];
+        
+        // Agregar updated_at solo si la columna existe
+        if ($hasUpdatedAt) {
+            $baseData['updated_at'] = now()->subDays(2);
+        }
+        
+        // Insertar datos de prueba
+        DB::table('tbposts')->insert([
+            $baseData,
+            array_merge($baseData, [
+                'title' => 'Sustainability en Gaming',
+                'description' => 'Los videojuegos pueden ser una herramienta poderosa para enseñar sobre sostenibilidad.',
+                'likes' => 12,
+                'dislikes' => 0,
+                'created_at' => now()->subDays(1),
+                'updated_at' => $hasUpdatedAt ? now()->subDays(1) : null
+            ]),
+            array_merge($baseData, [
+                'title' => 'Nuevas Funcionalidades',
+                'description' => 'Hemos agregado nuevas funcionalidades a nuestra plataforma.',
+                'likes' => 8,
+                'dislikes' => 2,
+                'created_at' => now(),
+                'updated_at' => $hasUpdatedAt ? now() : null
+            ])
+        ]);
+        
+        return "✅ Noticias de prueba insertadas correctamente en la tabla 'tbposts'";
+    } catch (\Exception $e) {
+        return "❌ Error: " . $e->getMessage();
+    }
+});
+
+// Ruta para verificar la estructura de las tablas
+Route::get('/check-table-structure', function() {
+    try {
+        $tables = ['tbposts', 'tbcomments', 'tbnewslikes', 'tbnewsdislikes', 'tbusers'];
+        $result = [];
+        
+        foreach ($tables as $table) {
+            try {
+                $columns = DB::select("DESCRIBE {$table}");
+                $result[$table] = [
+                    'columns' => collect($columns)->pluck('Field')->toArray(),
+                    'count' => DB::table($table)->count()
+                ];
+            } catch (\Exception $e) {
+                $result[$table] = "❌ Error: " . $e->getMessage();
+            }
+        }
+        
+        return $result;
+    } catch (\Exception $e) {
+        return "Error general: " . $e->getMessage();
+    }
+});

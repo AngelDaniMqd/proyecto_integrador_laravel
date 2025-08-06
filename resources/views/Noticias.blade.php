@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diseño con Transiciones</title>
+    <title>Noticias - Sustainity</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     @vite('resources/css/noticias.css')
-    @vite('resources/js/scripts.js')
     <!-- Cargar Font Awesome para los iconos -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    
-   
 </head>
 <body>
   <header class="navbar">
     <div class="navbar-left">
-      <a href="#">
+      <a href="{{ route('rutaInicio') }}">
         <img src="{{ asset('img/DevPlay logo.png') }}" alt="Logo" class="logo-image">
       </a>
     </div>
@@ -37,7 +34,6 @@
       @endif
       <button class="news-btn" onclick="window.location.href='{{ route('rutaNoticias') }}'">Noticias</button>
     </div>
-    
   </header>
 
   @if(session('success'))
@@ -46,48 +42,64 @@
   @if(session('error'))
     <div class="alert alert-danger">{{ session('error') }}</div>
   @endif
+
   <!-- Modal y overlay para comentarios -->
-  <div id="modalOverlay"></div>
+  <div id="modalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000;"></div>
   <div id="commentsModal">
     <div class="modal-header">
       <h2>Comentarios</h2>
       <button id="modalCloseBtn">×</button>
     </div>
-    <div id="modalCommentsList"></div>
-    <textarea id="modalNewComment" placeholder="Escribe tu comentario" style="width:100%; height: 80px;"></textarea>
-    <button id="modalPostCommentBtn">Publicar comentario</button>
+    
+    <div class="modal-content">
+      <div id="modalCommentsList"></div>
+      
+      <!-- Contenedor para el textarea -->
+      <div class="modal-textarea-container">
+        <textarea 
+          id="modalNewComment" 
+          placeholder="Escribe tu comentario (máximo 500 caracteres)" 
+          maxlength="500"
+          rows="3"></textarea>
+        <div id="charCounter" style="font-size: 0.6em; color: #ffcb05; text-align: right; margin-top: 5px;">0/500</div>
+      </div>
+      
+      <button id="modalPostCommentBtn">Publicar comentario</button>
+    </div>
   </div>
 
   <div class="news-container">
-    @foreach($news as $newsItem)
-      <div class="main-card appear-on-load" data-post-id="{{ $newsItem['id'] }}">
+    @if(empty($news))
+      <div class="main-card">
         <div class="text-content">
-          <h1 class="news-title">{{ $newsItem['title'] }}</h1>
-          <p class="news-description">{{ $newsItem['description'] }}</p>
-        </div>
-        @if(isset($newsItem['image']) && $newsItem['image'])
-          <img class="news-image" src="data:image/jpeg;base64,{{ $newsItem['image'] }}" alt="Imagen de la noticia">
-        @endif
-        <div class="news-actions">
-          <button class="like-btn" data-post-id="{{ $newsItem['id'] }}">
-            <i class="fas fa-thumbs-up"></i> <span class="like-count">{{ $newsItem['likes'] }}</span>
-          </button>
-          <button class="dislike-btn" data-post-id="{{ $newsItem['id'] }}">
-            <i class="fas fa-thumbs-down"></i> <span class="dislike-count">{{ $newsItem['dislikes'] }}</span>
-          </button>
-          <button class="toggle-comments-btn">
-            <i class="fas fa-comment-dots"></i> Ver comentarios
-          </button>
-        </div>
-        <div class="comments" style="display: none;">
-          <div class="comments-list">
-            <!-- Los comentarios se cargarán aquí si se usan en la card -->
-          </div>
-          <textarea class="new-comment" placeholder="Escribe un comentario"></textarea>
-          <button class="post-comment-btn" data-post-id="{{ $newsItem['id'] }}">Publicar comentario</button>
+          <h1>No hay noticias disponibles</h1>
+          <p>Actualmente no hay noticias para mostrar.</p>
         </div>
       </div>
-    @endforeach
+    @else
+      @foreach($news as $newsItem)
+        <div class="main-card appear-on-load" data-post-id="{{ $newsItem['id'] }}">
+          <div class="text-content">
+            <h1 class="news-title">{{ $newsItem['title'] }}</h1>
+            <p class="news-description">{{ $newsItem['description'] }}</p>
+          </div>
+          @if(isset($newsItem['image']) && $newsItem['image'])
+            <img class="news-image" src="data:image/jpeg;base64,{{ $newsItem['image'] }}" alt="Imagen de la noticia">
+          @endif
+          <div class="news-actions">
+            <button class="like-btn" data-post-id="{{ $newsItem['id'] }}">
+              <i class="fas fa-thumbs-up"></i> <span class="like-count">{{ $newsItem['likes'] ?? 0 }}</span>
+            </button>
+            <button class="dislike-btn" data-post-id="{{ $newsItem['id'] }}">
+              <i class="fas fa-thumbs-down"></i> <span class="dislike-count">{{ $newsItem['dislikes'] ?? 0 }}</span>
+            </button>
+            <button class="toggle-comments-btn">
+              <i class="fas fa-comment-dots"></i> Ver comentarios
+            </button>
+          </div>
+        </div>
+      @endforeach
+    @endif
   </div>
 
   <footer class="footer">
@@ -99,22 +111,61 @@
     <p>&copy; 2024 Sustainity. Todos los derechos reservados.</p>
   </footer>
 
+  <!-- Modal de carga -->
+  <div id="loadingModal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: #fff; padding: 20px; border-radius: 5px; text-align: center; font-family: 'Press Start 2P', cursive;">
+      <p class="loading-text">Cargando...</p>
+    </div>
+  </div>
 
-  <!-- Script para likes/dislikes y comentarios -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-      const baseUrl = "{{ url('/') }}"; // Cambiar a URL base de Laravel
+      const baseUrl = "{{ url('/') }}";
       const userId = "{{ session('user_id') ?? 'null' }}";
+      
+      console.log("Base URL:", baseUrl);
+      console.log("User ID:", userId);
+
       if (userId === "null") {
         console.warn("El usuario no está logueado; user_id es null.");
       }
 
+      // Función para dropdown de logout
+      window.toggleLogoutDropdown = function() {
+        const dropdown = document.getElementById('logoutDropdown');
+        if (dropdown) {
+          dropdown.style.display = (dropdown.style.display === 'block') ? 'none' : 'block';
+        }
+      }
+
+      // Cerrar dropdown al hacer click fuera
+      document.addEventListener('click', function(e) {
+        const userInfo = e.target.closest('.user-info');
+        const commentOptions = e.target.closest('.comment-options');
+        
+        // Cerrar dropdown de usuario si no se hace click en él
+        if (!userInfo) {
+          const dropdown = document.getElementById('logoutDropdown');
+          if (dropdown) dropdown.style.display = 'none';
+        }
+        
+        // Cerrar dropdowns de comentarios si no se hace click en ellos
+        if (!commentOptions) {
+          document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+          });
+        }
+      });
+
       // Funciones para mostrar y ocultar el modal de carga
       function showLoading() {
-        document.getElementById("loadingModal").style.display = "flex";
+        const modal = document.getElementById("loadingModal");
+        if (modal) modal.style.display = "flex";
       }
+      
       function hideLoading() {
-        document.getElementById("loadingModal").style.display = "none";
+        const modal = document.getElementById("loadingModal");
+        if (modal) modal.style.display = "none";
       }
 
       // --- Likes / Dislikes ---
@@ -205,6 +256,7 @@
         }
       }
 
+      // Event listeners para likes y dislikes
       document.querySelectorAll(".like-btn").forEach(button => {
         button.addEventListener("click", () => {
           if (userId === "null") {
@@ -227,15 +279,23 @@
 
       // --- Modal de Comentarios ---
       function openCommentsModal(postId) {
-        document.getElementById("commentsModal").dataset.postId = postId;
-        document.getElementById("commentsModal").style.display = "block";
-        document.getElementById("modalOverlay").style.display = "block";
-        loadComments(postId);
+        const modal = document.getElementById("commentsModal");
+        const overlay = document.getElementById("modalOverlay");
+        if (modal && overlay) {
+          modal.dataset.postId = postId;
+          modal.style.display = "block";
+          overlay.style.display = "block";
+          loadComments(postId);
+        }
       }
 
       function closeCommentsModal() {
-        document.getElementById("commentsModal").style.display = "none";
-        document.getElementById("modalOverlay").style.display = "none";
+        const modal = document.getElementById("commentsModal");
+        const overlay = document.getElementById("modalOverlay");
+        if (modal && overlay) {
+          modal.style.display = "none";
+          overlay.style.display = "none";
+        }
       }
 
       async function loadComments(postId) {
@@ -243,143 +303,68 @@
           const response = await fetch(`${baseUrl}/news/posts/${postId}/comments`);
           const comments = await response.json();
           const list = document.getElementById("modalCommentsList");
-          list.innerHTML = "";
-          comments.forEach(comment => {
-            const commentDiv = document.createElement("div");
-            commentDiv.classList.add("comment-item");
-            commentDiv.style.position = "relative";
+          if (list) {
+            list.innerHTML = "";
+            comments.forEach(comment => {
+              const commentDiv = document.createElement("div");
+              commentDiv.classList.add("comment-item");
+              commentDiv.dataset.commentId = comment.id;
 
-            const createdAt = new Date(comment.created_at);
-            const formattedDate = createdAt.toLocaleDateString('es-ES', { 
+              const createdAt = new Date(comment.created_at);
+              const formattedDate = createdAt.toLocaleDateString('es-ES', { 
                 day: '2-digit', month: 'short', year: 'numeric' 
               }) + ', ' +
               createdAt.toLocaleTimeString('es-ES', { 
                 hour: '2-digit', minute: '2-digit', hour12: false, hourCycle: 'h23', timeZone: 'UTC' 
               });
-            
-            commentDiv.innerHTML = `
-              <p>${comment.description}</p>
-              <small>Por: ${comment.user.username || comment.user.id} ${comment.created_at ? "- " + formattedDate : ""}</small>
-            `;
-            
-            if (parseInt(comment.user.id) === parseInt(userId)) {
-              const optionsBtn = document.createElement("span");
-              optionsBtn.textContent = "⋮";
-              optionsBtn.style.cursor = "pointer";
-              optionsBtn.style.position = "absolute";
-              optionsBtn.style.top = "5px";
-              optionsBtn.style.right = "5px";
-              optionsBtn.style.fontSize = "1.5em";
-              optionsBtn.style.color = "#3f51b5";
-
-              const optionsMenu = document.createElement("div");
-              optionsMenu.style.display = "none";
-              optionsMenu.style.position = "absolute";
-              optionsMenu.style.top = "30px";
-              optionsMenu.style.right = "5px";
-              optionsMenu.style.background = "white";
-              optionsMenu.style.padding = "8px";
-              optionsMenu.style.borderRadius = "5px";
-              optionsMenu.style.zIndex = "10";
               
-              const editBtn = document.createElement("button");
-              editBtn.textContent = "Editar";
-              editBtn.style.fontSize = "0.9em";
-              editBtn.style.padding = "8px 12px";
-              editBtn.style.marginBottom = "5px";
-              editBtn.style.backgroundColor = "#ffa500";
-              editBtn.style.border = "none";
-              editBtn.style.borderRadius = "4px";
-              editBtn.style.cursor = "pointer";
-              editBtn.addEventListener("click", () => {
-                const editArea = document.createElement("textarea");
-                editArea.value = comment.description;
-                editArea.classList.add("comment-edit-textarea");
-                const saveBtn = document.createElement("button");
-                saveBtn.textContent = "Guardar";
-                saveBtn.style.fontSize = "0.9em";
-                saveBtn.style.padding = "8px 12px";
-                saveBtn.style.backgroundColor = "#4CAF50";
-                saveBtn.style.border = "none";
-                saveBtn.style.borderRadius = "4px";
-                saveBtn.style.cursor = "pointer";
-                saveBtn.addEventListener("click", async () => {
-                  try {
-                    const res = await fetch(`${baseUrl}/news/comments/${comment.id}`, {
-                      method: "PUT",
-                      headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                      },
-                      body: JSON.stringify({ description: editArea.value })
-                    });
-                    const result = await res.json();
-                    if (result.message) { loadComments(postId); }
-                  } catch (err) { console.error(err); }
-                });
-                commentDiv.innerHTML = "";
-                commentDiv.appendChild(editArea);
-                commentDiv.appendChild(saveBtn);
-              });
+              // Verificar si el comentario pertenece al usuario actual
+              const isOwner = comment.user.id == userId;
               
-              const deleteBtn = document.createElement("button");
-              deleteBtn.textContent = "Eliminar";
-              deleteBtn.style.fontSize = "0.9em";
-              deleteBtn.style.padding = "8px 12px";
-              deleteBtn.style.backgroundColor = "#F44336";
-              deleteBtn.style.border = "none";
-              deleteBtn.style.borderRadius = "4px";
-              deleteBtn.style.cursor = "pointer";
-              deleteBtn.addEventListener("click", async () => {
-                if (confirm("¿Estás seguro de eliminar este comentario?")) {
-                  try {
-                    const res = await fetch(`${baseUrl}/news/comments/${comment.id}`, {
-                      method: "DELETE",
-                      headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                      }
-                    });
-                    const result = await res.json();
-                    if (result.message) { loadComments(postId); }
-                  } catch (err) { console.error(err); }
-                }
-              });
+              commentDiv.innerHTML = `
+                <p>${comment.description}</p>
+                <small>Por: ${comment.user.username || comment.user.id} ${comment.created_at ? "- " + formattedDate : ""}</small>
+                ${isOwner ? `
+                  <div class="comment-options">
+                    <button class="edit-comment-btn" onclick="toggleCommentMenu(${comment.id})" title="Opciones">⋮</button>
+                    <div id="commentMenu${comment.id}" class="comment-dropdown">
+                      <button class="dropdown-item" onclick="editComment(${comment.id}, '${comment.description.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-edit"></i> Editar
+                      </button>
+                      <button class="dropdown-item" onclick="deleteComment(${comment.id})">
+                        <i class="fas fa-trash"></i> Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ` : ''}
+              `;
               
-              optionsMenu.appendChild(editBtn);
-              optionsMenu.appendChild(deleteBtn);
-              
-              optionsBtn.addEventListener("click", () => {
-                optionsMenu.style.display = optionsMenu.style.display === "block" ? "none" : "block";
-              });
-              
-              commentDiv.appendChild(optionsBtn);
-              commentDiv.appendChild(optionsMenu);
-            }
-            
-            list.appendChild(commentDiv);
-          });
+              list.appendChild(commentDiv);
+            });
+          }
         } catch (error) {
           console.error("Error cargando comentarios:", error);
         }
       }
 
       async function postComment(postId) {
-        const commentText = document.getElementById("modalNewComment").value;
+        const commentText = document.getElementById("modalNewComment");
         const submitBtn = document.getElementById("modalPostCommentBtn");
         
+        if (!commentText || !submitBtn) return;
+        
         // Validaciones del lado del cliente
-        if (!commentText.trim()) {
+        if (!commentText.value.trim()) {
           alert("El comentario no puede estar vacío");
           return;
         }
         
-        if (commentText.trim().length < 3) {
+        if (commentText.value.trim().length < 3) {
           alert("El comentario debe tener al menos 3 caracteres");
           return;
         }
         
-        if (commentText.length > 500) {
+        if (commentText.value.length > 500) {
           alert("El comentario no puede exceder 500 caracteres");
           return;
         }
@@ -395,22 +380,18 @@
               "Content-Type": "application/json",
               "X-CSRF-TOKEN": "{{ csrf_token() }}"
             },
-            body: JSON.stringify({ user_id: Number(userId), description: commentText.trim() })
+            body: JSON.stringify({ user_id: Number(userId), description: commentText.value.trim() })
           });
           
           const result = await res.json();
           
           if (res.ok && result.message) {
-            document.getElementById("modalNewComment").value = "";
+            commentText.value = "";
             loadComments(postId);
-            
-            // Mostrar mensaje de éxito
-            showSuccessMessage("Comentario publicado exitosamente");
-            
-            // Cooldown visual - deshabilitar por 30 segundos
-            startCommentCooldown(submitBtn);
+            alert("Comentario publicado exitosamente");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Publicar comentario";
           } else {
-            // Mostrar error específico
             alert(result.error || "Error al publicar el comentario");
             submitBtn.disabled = false;
             submitBtn.textContent = "Publicar comentario";
@@ -422,79 +403,111 @@
           submitBtn.textContent = "Publicar comentario";
         }
       }
-      
-      // Función para mostrar cooldown visual
-      function startCommentCooldown(button) {
-        let countdown = 30;
-        button.disabled = true;
-        
-        const interval = setInterval(() => {
-          button.textContent = `Espera ${countdown}s`;
-          countdown--;
+
+      // Funciones para el menú de comentarios
+      window.toggleCommentMenu = function(commentId) {
+        const menu = document.getElementById(`commentMenu${commentId}`);
+        if (menu) {
+          // Cerrar otros menús
+          document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+            if (dropdown.id !== `commentMenu${commentId}`) {
+              dropdown.style.display = 'none';
+            }
+          });
           
-          if (countdown < 0) {
-            clearInterval(interval);
-            button.disabled = false;
-            button.textContent = "Publicar comentario";
-          }
-        }, 1000);
-      }
-      
-      // Función para mostrar mensajes de éxito
-      function showSuccessMessage(message) {
-        const successDiv = document.createElement("div");
-        successDiv.style.cssText = `
-          position: fixed;
-          top: 100px;
-          left: 50%;
-          transform: translateX(-50%);
-          background-color: #d4edda;
-          color: #155724;
-          padding: 10px 20px;
-          border: 1px solid #c3e6cb;
-          border-radius: 5px;
-          z-index: 3000;
-          font-family: 'Press Start 2P', cursive;
-          font-size: 0.7em;
-        `;
-        successDiv.textContent = message;
-        
-        document.body.appendChild(successDiv);
-        
-        setTimeout(() => {
-          successDiv.remove();
-        }, 3000);
-      }
-      
-      // Contador de caracteres para el textarea
-      const modalNewComment = document.getElementById("modalNewComment");
-      if (modalNewComment) {
-        // Crear contador de caracteres
-        const charCounter = document.createElement("div");
-        charCounter.style.cssText = `
-          font-size: 0.7em;
-          color: #ffcb05;
-          text-align: right;
-          margin-top: 5px;
-          font-family: 'Press Start 2P', cursive;
-        `;
-        charCounter.textContent = "0/500";
-        modalNewComment.parentNode.insertBefore(charCounter, modalNewComment.nextSibling);
-        
-        modalNewComment.addEventListener("input", function() {
-          const length = this.value.length;
-          charCounter.textContent = `${length}/500`;
-          
-          if (length > 500) {
-            charCounter.style.color = "#ff5722";
-          } else if (length > 400) {
-            charCounter.style.color = "#ffa500";
-          } else {
-            charCounter.style.color = "#ffcb05";
-          }
-        });
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
       }
 
+      window.editComment = function(commentId, currentText) {
+        const commentDiv = document.querySelector(`[data-comment-id="${commentId}"]`);
+        if (!commentDiv) return;
+        
+        const newText = prompt("Editar comentario:", currentText);
+        if (newText && newText.trim() !== currentText && newText.trim().length >= 3) {
+          updateCommentRequest(commentId, newText.trim());
+        }
+        
+        // Cerrar el menú
+        const menu = document.getElementById(`commentMenu${commentId}`);
+        if (menu) menu.style.display = 'none';
+      }
+
+      window.deleteComment = function(commentId) {
+        if (confirm("¿Estás seguro de que quieres eliminar este comentario?")) {
+          deleteCommentRequest(commentId);
+        }
+        
+        // Cerrar el menú
+        const menu = document.getElementById(`commentMenu${commentId}`);
+        if (menu) menu.style.display = 'none';
+      }
+
+      async function updateCommentRequest(commentId, newDescription) {
+        try {
+          const response = await fetch(`${baseUrl}/news/comments/${commentId}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ description: newDescription })
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert("Comentario actualizado exitosamente");
+            // Recargar comentarios
+            const postId = document.getElementById("commentsModal").dataset.postId;
+            if (postId) loadComments(postId);
+          } else {
+            alert(result.error || "Error al actualizar el comentario");
+          }
+        } catch (error) {
+          console.error("Error actualizando comentario:", error);
+          alert("Error de conexión. Intenta nuevamente.");
+        }
+      }
+
+      async function deleteCommentRequest(commentId) {
+        try {
+          const response = await fetch(`${baseUrl}/news/comments/${commentId}`, {
+            method: "DELETE",
+            headers: {
+              "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            }
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert("Comentario eliminado exitosamente");
+            // Recargar comentarios
+            const postId = document.getElementById("commentsModal").dataset.postId;
+            if (postId) loadComments(postId);
+          } else {
+            alert(result.error || "Error al eliminar el comentario");
+          }
+        } catch (error) {
+          console.error("Error eliminando comentario:", error);
+          alert("Error de conexión. Intenta nuevamente.");
+        }
+      }
+
+      // Cerrar menús al hacer click fuera
+      document.addEventListener("click", function(e) {
+        if (!e.target.closest('.comment-options')) {
+          document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+          });
+        }
+      });
+
+      // Cerrar modal al hacer click en el overlay
+      document.getElementById("modalOverlay").addEventListener("click", closeCommentsModal);
+
+      // Event listeners para comentarios
       document.querySelectorAll(".toggle-comments-btn").forEach(button => {
         button.addEventListener("click", function() {
           const postId = this.closest(".main-card").dataset.postId;
@@ -503,22 +516,55 @@
         });
       });
 
-      document.getElementById("modalPostCommentBtn").addEventListener("click", function() {
-        const postId = document.getElementById("commentsModal").dataset.postId;
-        postComment(postId);
-      });
+      const modalPostBtn = document.getElementById("modalPostCommentBtn");
+      const modalCloseBtn = document.getElementById("modalCloseBtn");
+      
+      if (modalPostBtn) {
+        modalPostBtn.addEventListener("click", function() {
+          const postId = document.getElementById("commentsModal").dataset.postId;
+          if (postId) postComment(postId);
+        });
+      }
 
-      document.getElementById("modalCloseBtn").addEventListener("click", closeCommentsModal);
+      if (modalCloseBtn) {
+        modalCloseBtn.addEventListener("click", closeCommentsModal);
+      }
+
+      // Contador de caracteres para el textarea
+      const modalNewComment = document.getElementById("modalNewComment");
+      const charCounter = document.getElementById("charCounter");
+
+      if (modalNewComment && charCounter) {
+        modalNewComment.addEventListener("input", function() {
+          const length = this.value.length;
+          charCounter.textContent = `${length}/500`;
+          
+          // Cambiar color según la cantidad
+          if (length > 450) {
+            charCounter.style.color = "#ff5722"; // Rojo
+          } else if (length > 350) {
+            charCounter.style.color = "#ffa500"; // Naranja
+          } else {
+            charCounter.style.color = "#ffcb05"; // Amarillo
+          }
+          
+          // Prevenir que se exceda el límite
+          if (length >= 500) {
+            this.value = this.value.substring(0, 500);
+            charCounter.textContent = "500/500";
+            charCounter.style.color = "#ff5722";
+          }
+        });
+        
+        // Prevenir redimensionamiento horizontal
+        modalNewComment.addEventListener("mousedown", function(e) {
+          if (e.offsetX > this.offsetWidth - 20) {
+            e.preventDefault();
+          }
+        });
+      }
     });
   </script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
-
-  <!-- Al final del body, fuera del header -->
-  <div id="loadingModal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center;">
-    <div style="background: #fff; padding: 20px; border-radius: 5px; text-align: center; font-family: 'Press Start 2P', cursive;">
-      <p class="loading-text">Cargando...</p>
-    </div>
-  </div>
 </body>
 </html>
