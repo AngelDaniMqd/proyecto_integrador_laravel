@@ -4,32 +4,100 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class NoticiasController extends Controller
 {
     public function index()
     {
         try {
-            // Obtener noticias desde tbposts (no news_posts)
-            $news = DB::table('tbposts')
+            // Usar error_log para debug en Docker (más confiable que Laravel Log)
+            error_log('=== DEBUG NoticiasController INICIO ===');
+            
+            // Verificar conexión DB primero
+            try {
+                $pdo = DB::connection()->getPdo();
+                error_log('✅ Conexión BD exitosa');
+            } catch (\Exception $e) {
+                error_log('❌ Error conexión BD: ' . $e->getMessage());
+                return view('noticias', ['news' => []]); // minúscula para Docker
+            }
+            
+            // Verificar si la tabla existe
+            if (!DB::getSchemaBuilder()->hasTable('tbposts')) {
+                error_log('❌ Tabla tbposts no existe');
+                return view('noticias', ['news' => []]);
+            }
+            
+            error_log('✅ Tabla tbposts existe');
+
+            // Obtener datos de forma más simple
+            $rawPosts = DB::table('tbposts')
                 ->select('id', 'title', 'description', 'image', 'likes', 'dislikes', 'created_at')
                 ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function ($post) {
-                    return [
+                ->get();
+
+            error_log('✅ Registros obtenidos: ' . $rawPosts->count());
+
+            // Transformar con manejo de errores robusto
+            $news = [];
+            foreach ($rawPosts as $post) {
+                try {
+                    error_log('Procesando post ID: ' . $post->id);
+                    
+                    // Manejar imagen de forma segura
+                    $imageBase64 = null;
+                    if ($post->image && !empty($post->image)) {
+                        try {
+                            if (strlen($post->image) > 100) { // Verificar que sea una imagen válida
+                                $imageBase64 = 'data:image/png;base64,' . base64_encode($post->image);
+                                error_log('✅ Imagen procesada para post ' . $post->id);
+                            }
+                        } catch (\Exception $e) {
+                            error_log('❌ Error procesando imagen post ' . $post->id . ': ' . $e->getMessage());
+                        }
+                    }
+
+                    $news[] = [
                         'id' => $post->id,
-                        'title' => $post->title,
-                        'description' => $post->description,
-                        'image' => $post->image ? base64_encode($post->image) : null,
-                        'likes' => $post->likes ?? 0,
-                        'dislikes' => $post->dislikes ?? 0,
+                        'title' => $post->title ?? 'Sin título',
+                        'description' => $post->description ?? 'Sin descripción',
+                        'image' => $imageBase64,
+                        'likes' => (int)($post->likes ?? 0),
+                        'dislikes' => (int)($post->dislikes ?? 0),
                         'created_at' => $post->created_at
                     ];
-                });
+                    
+                } catch (\Exception $e) {
+                    error_log('❌ Error procesando post ' . $post->id . ': ' . $e->getMessage());
+                    // Agregar post sin imagen si hay error
+                    $news[] = [
+                        'id' => $post->id,
+                        'title' => $post->title ?? 'Sin título',
+                        'description' => $post->description ?? 'Sin descripción',
+                        'image' => null,
+                        'likes' => (int)($post->likes ?? 0),
+                        'dislikes' => (int)($post->dislikes ?? 0),
+                        'created_at' => $post->created_at
+                    ];
+                }
+            }
 
-            return view('Noticias', compact('news'));
+            error_log('✅ Transformación completada. Total: ' . count($news));
+            error_log('=== Enviando a vista noticias (minúscula) ===');
+
+            return view('noticias', compact('news')); // minúscula para Docker
+            
         } catch (\Exception $e) {
-            return view('Noticias', ['news' => [], 'error' => $e->getMessage()]);
+            error_log('❌ ERROR GENERAL en NoticiasController: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            
+            // Mostrar error en producción para debug
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : 'Error interno del servidor'
+            ], 500);
         }
     }
 

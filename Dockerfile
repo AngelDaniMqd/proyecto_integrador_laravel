@@ -1,30 +1,129 @@
-FROM php:8.2-fpm
+# Multi-stage build para optimizar el tamaño final
+FROM node:18-alpine AS node-builder
 
-WORKDIR /var/www
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
 
-RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    git \
-    curl && \
-    docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
-
-# Instalar Composer globalmente
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Copiar archivos de composer para cachear dependencias
-COPY composer.json composer.lock ./
-RUN composer install --prefer-dist --no-dev --no-scripts --no-interaction
-
-# Copiar el resto del código
+# Copiar todos los archivos necesarios para build
+COPY vite.config.js ./
+COPY resources/ ./resources/
+COPY public/ ./public/
 COPY . .
 
-# Dar permisos adecuados a storage y bootstrap/cache (ajustar según sea necesario)
-RUN chown -R www-data:www-data /var/www
+# Build con debug mejorado
+RUN echo "=== STARTING NPM BUILD ===" && \
+    npm run build && \
+    echo "=== BUILD COMPLETED ===" && \
+    ls -la public/build/ || echo "Build directory not found"
 
-EXPOSE 9000
+FROM php:8.2-apache
 
-CMD ["php-fpm"]
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    libonig-dev \
+    unzip \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar extensiones PHP
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip
+
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configurar Apache
+RUN a2enmod rewrite headers
+COPY <<EOF /etc/apache2/sites-available/000-default.conf
+<VirtualHost *:80>
+    ServerName localhost
+    DocumentRoot /var/www/html/public
+    
+    <Directory /var/www/html>
+        AllowOverride None
+        Require all granted
+    </Directory>
+    
+    <Directory /var/www/html/public>
+        AllowOverride All
+        Options Indexes FollowSymLinks
+        Require all granted
+        
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^(.*)$ index.php [QSA,L]
+    </Directory>
+    
+    ErrorLog \${APACHE_LOG_DIR}/error.log
+    CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+EOF
+
+WORKDIR /var/www/html
+
+# Copiar composer files
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --optimize-autoloader
+
+# Copiar aplicación
+COPY . .
+
+# Copiar assets compilados desde node-builder
+COPY --from=node-builder /app/public/build ./public/build
+
+RUN composer dump-autoload --optimize
+
+# Permisos
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 777 /var/www/html/storage \
+    && chmod -R 777 /var/www/html/bootstrap/cache
+
+# Script de inicio
+COPY <<EOF /usr/local/bin/start.sh
+#!/bin/bash
+set -e
+
+echo "=== INICIANDO SUSTAINITY PI ==="
+
+# Crear directorios
+mkdir -p /var/www/html/storage/{logs,framework/{cache,sessions,views},app/public}
+mkdir -p /var/www/html/bootstrap/cache
+
+# Permisos
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 777 /var/www/html/storage
+chmod -R 777 /var/www/html/bootstrap/cache
+
+# Crear enlace storage
+php artisan storage:link --force 2>/dev/null || echo "Warning: storage link failed"
+
+echo "=== DEBUG ASSETS ==="
+echo "Build directory:"
+ls -la public/build/ 2>/dev/null || echo "❌ No build directory"
+echo "Manifest content:"
+head -5 public/build/manifest.json 2>/dev/null || echo "❌ No manifest file"
+echo "CSS files in build:"
+ls -la public/build/assets/*.css 2>/dev/null || echo "❌ No CSS files"
+
+echo "=== INICIANDO APACHE ==="
+apache2-foreground
+EOF
+
+RUN chmod +x /usr/local/bin/start.sh
+
+EXPOSE 80
+CMD ["/usr/local/bin/start.sh"]

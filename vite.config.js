@@ -6,9 +6,13 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/js/app.js',
+                'resources/css/donativos.css',
                 'resources/css/inicio.css',
-                'resources/js/script.js' // Agregar este archivo
+                'resources/css/login.css',
+                'resources/css/nosotros.css',
+                'resources/css/noticias.css',
+                'resources/js/app.js',
+                'resources/js/script.js'  // También incluir script.js si existe
             ],
             refresh: true,
         }),
