@@ -18,7 +18,7 @@ export default defineConfig({
         }),
     ],
     build: {
-        manifest: true,
+        manifest: true,  // Asegurar que está habilitado
         outDir: 'public/build',
         rollupOptions: {
             output: {

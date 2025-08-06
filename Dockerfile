@@ -11,12 +11,16 @@ COPY resources/ ./resources/
 COPY public/ ./public/
 COPY . .
 
-# Build con variables correctas para Railway
+# Build con debug mejorado
 ENV NODE_ENV=production
-ENV VITE_APP_URL=placeholder
-RUN npm run build && \
-    echo "=== ASSETS BUILD COMPLETED ===" && \
-    ls -la public/build/
+RUN echo "=== STARTING VITE BUILD ===" && \
+    npm run build && \
+    echo "=== VITE BUILD COMPLETED ===" && \
+    ls -la public/build/ && \
+    ls -la public/build/assets/ && \
+    echo "=== CHECKING MANIFEST ===" && \
+    ls -la public/build/manifest.json && \
+    cat public/build/manifest.json | head -10
 
 FROM php:8.2-apache
 
@@ -83,13 +87,14 @@ RUN composer install --no-dev --no-scripts --optimize-autoloader
 # Copiar aplicación
 COPY . .
 
-# Copiar assets Y crear enlaces
+# Copiar assets compilados
 COPY --from=node-builder /app/public/build ./public/build
 
-# AGREGAR: Verificar que los assets estén ahí
-RUN echo "=== VERIFICANDO ASSETS ===" && \
+# VERIFICAR que manifest.json esté ahí
+RUN echo "=== POST-COPY VERIFICATION ===" && \
     ls -la public/build/ && \
-    ls -la public/build/assets/ || echo "No assets directory"
+    ls -la public/build/manifest.json && \
+    cat public/build/manifest.json | head -5
 
 RUN composer dump-autoload --optimize
 
@@ -99,7 +104,7 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 777 /var/www/html/storage \
     && chmod -R 777 /var/www/html/bootstrap/cache
 
-# Script de inicio mejorado
+# Script de inicio
 COPY <<EOF /usr/local/bin/start.sh
 #!/bin/bash
 set -e
@@ -119,13 +124,11 @@ chmod -R 755 /var/www/html/public
 # Storage link
 php artisan storage:link --force 2>/dev/null || echo "Warning: storage link failed"
 
-echo "=== DEBUG ASSETS ==="
+echo "=== DEBUG ASSETS FINAL ==="
 echo "Build directory:"
 ls -la public/build/ || echo "❌ No build directory"
-echo "Assets:"
-ls -la public/build/assets/ || echo "❌ No assets"
-echo "Manifest:"
-cat public/build/manifest.json || echo "❌ No manifest"
+echo "Manifest file:"
+ls -la public/build/manifest.json && cat public/build/manifest.json | head -10 || echo "❌ No manifest file"
 
 echo "=== INICIANDO APACHE ==="
 apache2-foreground
