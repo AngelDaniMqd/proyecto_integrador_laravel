@@ -5,17 +5,18 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copiar todos los archivos necesarios para build
+# Copiar archivos para build
 COPY vite.config.js ./
 COPY resources/ ./resources/
 COPY public/ ./public/
 COPY . .
 
-# Build con debug mejorado
-RUN echo "=== STARTING NPM BUILD ===" && \
-    npm run build && \
-    echo "=== BUILD COMPLETED ===" && \
-    ls -la public/build/ || echo "Build directory not found"
+# Build con variables correctas para Railway
+ENV NODE_ENV=production
+ENV VITE_APP_URL=placeholder
+RUN npm run build && \
+    echo "=== ASSETS BUILD COMPLETED ===" && \
+    ls -la public/build/
 
 FROM php:8.2-apache
 
@@ -82,17 +83,23 @@ RUN composer install --no-dev --no-scripts --optimize-autoloader
 # Copiar aplicación
 COPY . .
 
-# Copiar assets compilados desde node-builder
+# Copiar assets Y crear enlaces
 COPY --from=node-builder /app/public/build ./public/build
+
+# AGREGAR: Verificar que los assets estén ahí
+RUN echo "=== VERIFICANDO ASSETS ===" && \
+    ls -la public/build/ && \
+    ls -la public/build/assets/ || echo "No assets directory"
 
 RUN composer dump-autoload --optimize
 
 # Permisos
 RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/public \
     && chmod -R 777 /var/www/html/storage \
     && chmod -R 777 /var/www/html/bootstrap/cache
 
-# Script de inicio
+# Script de inicio mejorado
 COPY <<EOF /usr/local/bin/start.sh
 #!/bin/bash
 set -e
@@ -107,17 +114,18 @@ mkdir -p /var/www/html/bootstrap/cache
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 777 /var/www/html/storage
 chmod -R 777 /var/www/html/bootstrap/cache
+chmod -R 755 /var/www/html/public
 
-# Crear enlace storage
+# Storage link
 php artisan storage:link --force 2>/dev/null || echo "Warning: storage link failed"
 
 echo "=== DEBUG ASSETS ==="
 echo "Build directory:"
-ls -la public/build/ 2>/dev/null || echo "❌ No build directory"
-echo "Manifest content:"
-head -5 public/build/manifest.json 2>/dev/null || echo "❌ No manifest file"
-echo "CSS files in build:"
-ls -la public/build/assets/*.css 2>/dev/null || echo "❌ No CSS files"
+ls -la public/build/ || echo "❌ No build directory"
+echo "Assets:"
+ls -la public/build/assets/ || echo "❌ No assets"
+echo "Manifest:"
+cat public/build/manifest.json || echo "❌ No manifest"
 
 echo "=== INICIANDO APACHE ==="
 apache2-foreground

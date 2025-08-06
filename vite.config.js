@@ -12,9 +12,18 @@ export default defineConfig({
                 'resources/css/nosotros.css',
                 'resources/css/noticias.css',
                 'resources/js/app.js',
-                'resources/js/script.js'  // También incluir script.js si existe
+                'resources/js/script.js'
             ],
             refresh: true,
         }),
     ],
+    build: {
+        manifest: true,
+        outDir: 'public/build',
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
+    },
 });
