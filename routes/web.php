@@ -31,7 +31,7 @@ Route::get('/Consulta', function () {
 })->name('rutaConsultas');
 
 
-Route::get('/Noti', [NewsController::class, 'index'])->name('rutaNoticias');
+Route::get('/Noti', [NewsController::class, 'index'])->name('rutaNoticiasApi');
 
 Route::get('/demo', function () {
     return view('demo');
@@ -66,8 +66,8 @@ Route::get('/donativos', [donativoController::class, 'index'])->name('enviarDona
 Route::post('/CrearCuenta', [crearcuentaController::class, 'store'])->name('rutaCrearCuenta');
 Route::get('/CrearCuenta', [crearcuentaController::class, 'index'])->name('rutaCrear'); */
 
-Route::get('/nosotros/create', [nosotrosController::class, 'create'])->name('rutaInfo');
-Route::post('/nosotros/create', [nosotrosController::class, 'store'])->name('rutaInfo');
+Route::get('/nosotros/create', [nosotrosController::class, 'create'])->name('rutaInfoCreate');
+Route::post('/nosotros/create', [nosotrosController::class, 'store'])->name('rutaInfoStore');
 Route::get('/nosotros', [nosotrosController::class, 'index'])->name('enviarInfo');
 
 /* Route::get('/login/create', [loginController::class, 'create'])->name('rutaLogin');
@@ -90,11 +90,6 @@ Route::delete('/Consultar/{id}', [consultarController::class, 'destroy'])->name(
 Route::view('/component','componentes')->name('rutacomponent');
 
 
-
-// Ruta para mostrar el formulario de donación
-Route::get('/donar', function () {
-    return view('donativos'); // Vista con el formulario de donación
-})->name('rutaDonativos');
 
 // Ruta para manejar el pago con Stripe
 Route::post('/checkout', function (Request $request) {
