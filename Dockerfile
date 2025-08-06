@@ -1,53 +1,42 @@
 # Multi-stage build para optimizar el tamaño final
+# 1) Build de assets con Node
 FROM node:18-alpine AS node-builder
-
 WORKDIR /app
-COPY package*.json ./
+COPY package*.json vite.config.js ./
 RUN npm ci
-
-# Copiar archivos para build
-COPY vite.config.js ./
-COPY resources/ ./resources/
-COPY public/ ./public/
-COPY . .
-
-# Build de assets
-ENV NODE_ENV=production
+COPY resources/ resources/
+COPY public/ public/
 RUN npm run build
 
-FROM php:8.0-apache
+# 2) Imagen final con PHP 8.2 + Apache
+FROM php:8.2-apache
 
-# 1) Instalar dependencias sistema, PHP y Node.js (para Vite)
+# Instala extensiones PHP
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libzip-dev zlib1g-dev libpng-dev libonig-dev \
-    # Node.js para Vite
-    nodejs npm \
+    libzip-dev zlib1g-dev libpng-dev libonig-dev zip unzip git curl \
   && docker-php-ext-install pdo_mysql mbstring bcmath zip exif pcntl gd \
   && a2enmod rewrite \
   && rm -rf /var/lib/apt/lists/*
 
-# 2) Instalar Composer
+# Instala Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# 3) Instalar dependencias PHP
+# Dependencias PHP
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# 4) Copiar el resto de la aplicación y compilar assets
+# Copia código y assets compilados
 COPY . .
-RUN npm ci \
-  && npm run build
+COPY --from=node-builder /app/public/build public/build
 
-# 5) Ajustar permisos
+# Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache \
   && chmod -R 775 storage bootstrap/cache
 
-# 6) Exponer el puerto HTTP
 EXPOSE 80
 
-# 7) Migraciones, caches y arranque de Apache
 CMD ["bash","-lc","php artisan migrate --force \
   && php artisan config:cache \
   && php artisan route:cache \
