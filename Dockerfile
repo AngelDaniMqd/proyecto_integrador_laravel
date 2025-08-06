@@ -69,8 +69,8 @@ COPY . .
 # Copiar assets compilados
 COPY --from=node-builder /app/public/build ./public/build
 
-# CREAR .env a partir de variables de entorno
-RUN echo 'APP_NAME=Sustainity PI' > .env && \
+# CREAR .env a partir de variables de entorno (CORREGIDO)
+RUN echo 'APP_NAME="Sustainity PI"' > .env && \
     echo 'APP_ENV=${APP_ENV:-production}' >> .env && \
     echo 'APP_KEY=${APP_KEY}' >> .env && \
     echo 'APP_DEBUG=${APP_DEBUG:-false}' >> .env && \
