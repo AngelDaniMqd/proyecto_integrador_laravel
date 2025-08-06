@@ -11,9 +11,10 @@ RUN npm run build
 # 2) Imagen final con PHP 8.2 + Apache
 FROM php:8.2-apache
 
-# Instala extensiones PHP
+# Instala extensiones PHP y Node.js
 RUN apt-get update && apt-get install -y \
     libzip-dev zlib1g-dev libpng-dev libonig-dev zip unzip git curl \
+    nodejs npm \
   && docker-php-ext-install pdo_mysql mbstring bcmath zip exif pcntl gd \
   && a2enmod rewrite \
   && rm -rf /var/lib/apt/lists/*
@@ -35,14 +36,17 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Primero copia TODO el código (incluido artisan)
+# Copiar código
 COPY . .
 
-# Luego instala dependencias PHP (ahora artisan existe)
+# Instalar dependencias PHP
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Copia los assets compilados desde el stage de Node
-COPY --from=node-builder /app/public/build public/build
+# Instalar dependencias JS y compilar assets
+RUN npm ci && npm run build
+
+# Verificar que manifest.json existe
+RUN ls -la public/build/ || echo "No build directory found"
 
 # Permisos correctos
 RUN chown -R www-data:www-data /var/www/html \
