@@ -1,0 +1,605 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1a1a1a;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+}
+.main-card {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.2); /* Fondo blanco con transparencia */
+    padding: 40px;
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+.character-image {
+    position: absolute;
+    right: -100px; /* Ajusta la posición si es necesario */
+    top: -200px; /* Ajusta la posición si es necesario */
+    width: 600px; /* Aumenta el tamaño de la imagen */
+    height: auto;
+    z-index: 2;
+    transform: rotate(10deg);
+    image-rendering: pixelated;
+}
+#loadingModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8); /* Fondo más oscuro */
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+.password-toggle {
+    position: absolute;
+    right: -40px; /* Mueve el botón más a la derecha */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #ffcb05;
+    cursor: pointer;
+    font-size: 0.7em;
+    padding: 0;
+    font-family: 'Press Start 2P', cursive;
+}
+/* Estilo para los labels del formulario */
+.password-field-container input {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    margin-bottom: 5px;
+    border: 2px solid #ffcb05;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    text-align: center;
+}
+.user-info:hover .logout-menu {
+    display: block;
+}
+.user-info {
+    position: relative;
+    display: inline-block;
+    margin-right: 20px; /* separa del botón Noticias */
+    vertical-align: middle;
+    margin-top: 6px
+}
+
+.username {
+    cursor: pointer;
+    padding: 15px;
+    font-size: 1.2em;
+    color: #fff; /* o el color que uses en el navbar */
+}
+
+/* Dropdown flotante para cerrar sesión */
+.logout-dropdown {
+    position: absolute;
+    top: 120%; /* se muestra debajo del nombre */
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    display: none;
+    z-index: 1000;
+}
+
+.logout-dropdown button {
+    background-color: red;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    padding: 8px 15px;
+    font-size: 0.7em; /* Reducimos el tamaño de la fuente */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    white-space: nowrap; /* Evita que el texto se divida en múltiples líneas */
+    min-width: fit-content; /* Asegura que el botón se ajuste al contenido */
+}
+
+.logout-dropdown button:hover {
+    background-color: darkred;
+}
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 5%;
+    background-color: rgba(13, 13, 13, 0.8);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    font-size: 0.8em;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.navbar-left a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-image {
+    height: 60px;
+    width: auto;
+}
+
+.small-logo {
+    height: 100px;
+    width: auto;
+}
+
+.navbar-center {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-grow: 1;
+    margin-left: 100px;
+}
+
+.navbar-center a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.navbar-center a:hover {
+    color: #ffa500;
+}
+
+.navbar-right {
+    display: flex;
+    gap: 15px;
+    margin-right: 100px;
+}
+
+.login-btn,
+.news-btn {
+    padding: 10px 20px;
+    font-size: 0.8em;
+    background: none;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.news-btn {
+    background-color: #ffa500;
+    color: #0d0d0d;
+    border: none;
+}
+
+.login-btn:hover {
+    background-color: #fff;
+    color: #0d0d0d;
+}
+
+.news-btn:hover {
+    background: none;
+    color: #fff;
+    border: 2px solid #ffa500;
+}
+
+.trailer-card {
+    width: 100%;
+    max-width: 1300px;
+    height: 500px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding: 50px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.2)), url('/public/img/fondo.webp');
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    opacity: 0;
+    transform: translateY(50px);
+    animation: fadeIn 1s forwards;
+    margin-top: 90px;
+}
+
+.main-card {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 40px;
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.text-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+}
+
+.text-content-left {
+    max-width: 50%;
+    z-index: 1;
+    text-align: center;
+}
+
+.video-content {
+    max-width: 60%;
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+    align-items: center;
+}
+
+.video-content video {
+    width: 100%;
+    height: 350px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+h1, h2 {
+    font-size: 2.5em;
+    color: #ffcb05;
+}
+
+p {
+    font-size: 1em;
+    line-height: 1.5;
+}
+
+.play-btn {
+    padding: 12px 24px;
+    font-size: 1em;
+    background-color: #ff5722;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.play-btn:hover {
+    background-color: #e64a19;
+}
+
+.character-image {
+    position: absolute;
+    right: -80px;
+    top: -150px;
+    width: 500px;
+    height: auto;
+    z-index: 2;
+    transform: rotate(10deg);
+    image-rendering: pixelated;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.appear-on-load {
+    animation-delay: 0.5s;
+}
+
+.card-section {
+    text-align: center;
+    margin-top: 100px;
+    color: #fff;
+}
+
+.card-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.card {
+    width: 250px;
+    height: 400px;
+    background-color: #333;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(100px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.footer {
+    width: 100%;
+    background-color: #111;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.8em;
+    margin-top: 200px; 
+    border-top: 2px solid #333;
+}
+
+.footer-content {
+    margin-bottom: 10px;
+}
+
+.footer-content a {
+    color: #ffcb05;
+    text-decoration: none;
+    margin: 0 10px;
+    transition: color 0.3s;
+}
+
+.footer-content a:hover {
+    color: #ff5722;
+}
+
+.donation-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.donation-form input,
+.donation-form select {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    margin-bottom: 5px;
+    border: 2px solid #ffcb05;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    text-align: center;
+}
+
+.donation-form input::placeholder,
+.donation-form select {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.donation-form select option {
+    background-color: #1a1a1a;
+}
+
+.donation-form label {
+    margin-top: 20px;
+    padding: 10px;
+    font-size: 0.8em;
+    color: #ffcb05;
+}
+
+.play-btn {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px;
+    font-size: 1em;
+    background-color: #ff5722;
+    color: #fff;
+    border: none;
+    margin-top: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center;
+}
+
+.payment-buttons {
+    display: none;
+}
+
+.payment-buttons.active {
+    display: block;
+}
+
+.payment-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 0.8em;
+    text-align: center;
+    background-color: #ffcb05;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.payment-button:hover {
+    background-color: #ffd700;
+}
+
+.alert {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    top: 80px;
+    z-index: 1001;
+}
+
+.main-card {
+    width: 200%;
+    max-width: 900px;
+    margin: 60px auto 80px auto;
+    height: auto;
+    margin: auto;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.858);
+    padding: 70px;
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.3)), url('/public/img/fondo.webp');
+    background-size: cover;
+    background-position: center;
+    margin-top: 90px;
+}
+.main-card img.Parche-image, .trailer-card img.discord-image {
+    width: 50%; 
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
+    margin-left: 20px;
+}
+
+.password-strength-meter {
+    height: 10px;
+    width: 100%;
+    max-width: 300px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 10px 0;
+    border-radius: 5px;
+    overflow: hidden;
+    display: none;
+}
+
+.password-strength-meter-bar {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-weak {
+    width: 25%;
+    background-color: #ff4d4d;
+}
+
+.strength-medium {
+    width: 50%;
+    background-color: #ffa500;
+}
+
+.strength-good {
+    width: 75%;
+    background-color: #ffcb05;
+}
+
+.strength-strong {
+    width: 100%;
+    background-color: #4CAF50;
+}
+
+.password-feedback {
+    font-size: 0.7em;
+    margin: 5px 0 15px 0;
+    color: #ffcb05;
+    display: none;
+    text-align: center;
+    max-width: 300px;
+}
+
+.password-field-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #ffcb05;
+    cursor: pointer;
+    font-size: 0.7em;
+    padding: 0;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.create-account-link {
+    color: #ffcb05;
+    text-decoration: none;
+    margin-top: 20px;
+    display: inline-block;
+    transition: color 0.3s;
+}
+
+.create-account-link:hover {
+    color: #ff5722;
+}
+
+small.text-danger {
+    color: #ff5722;
+    display: block;
+    margin-bottom: 10px;
+    font-size: 0.7em;
+    max-width: 300px;
+    
+    text-align: center;
+}
+.loading-text {
+    color: #000000; /* Cambia el color aquí */
+    font-family: 'Press Start 2P', cursive;
+}
+#modalCloseBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: red;
+    color: white;
+    border: none;
+    font-size: 1.5em;
+    line-height: 1;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }

@@ -1,0 +1,1022 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1a1a1a;
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+}
+.news-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    padding: 20px;
+}
+.main-card {
+    width: 100%;
+    max-width: 800px; /* Tamaño máximo del recuadro */
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    text-align: left;
+}
+.text-content {
+    margin-bottom: 10px;
+}
+.news-title {
+    margin: 0 0 15px;
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+.news-description {
+    margin: 0 0 15px;
+    font-size: 1.1rem;
+}
+.news-actions {
+    display: flex; /* Alineación horizontal */
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-start;
+}
+.like-btn, .dislike-btn, .toggle-comments-btn {
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 10px 15px;
+    border: 2px solid transparent;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+/* Estilo para los iconos y texto dentro de los botones */
+.like-btn i, .dislike-btn i, .toggle-comments-btn i {
+    margin-right: 5px; /* Espacio entre el icono y el texto */
+}
+
+/* Estilo para el botón "Like" */
+.like-btn {
+    background-color: #007bff;   /* Color de fondo azul */
+    color: white;                /* Texto blanco */
+    border-color: #007bff;       /* Borde azul */
+}
+
+/* Estilo para el botón "Like" al pasar el mouse */
+.like-btn:hover {
+    background-color: #0056b3;   /* Cambio de color al pasar el mouse */
+    border-color: #0056b3;
+}
+
+/* Estilo para el botón "Dislike" */
+.dislike-btn {
+    background-color: #dc3545;   /* Color de fondo rojo */
+    color: white;                /* Texto blanco */
+    border-color: #dc3545;       /* Borde rojo */
+}
+
+/* Estilo para el botón "Dislike" al pasar el mouse */
+.dislike-btn:hover {
+    background-color: #c82333;   /* Cambio de color al pasar el mouse */
+    border-color: #c82333;
+}
+
+/* Estilo para el botón "Ver comentarios" */
+.toggle-comments-btn {
+    background-color: #28a745;   /* Color de fondo verde */
+    color: white;                /* Texto blanco */
+    border-color: #28a745;       /* Borde verde */
+}
+
+/* Estilo para el botón "Ver comentarios" al pasar el mouse */
+.toggle-comments-btn:hover {
+    background-color: #218838;   /* Cambio de color al pasar el mouse */
+    border-color: #218838;
+}
+
+/* Estilo para los botones cuando están desactivados */
+.like-btn:disabled, .dislike-btn:disabled, .toggle-comments-btn:disabled {
+    background-color: #d6d6d6;  /* Color gris para botones desactivados */
+    border-color: #d6d6d6;
+    color: #7a7a7a;             /* Texto gris */
+    cursor: not-allowed;        /* Cursor deshabilitado */
+}
+
+/* Ajuste de la imagen para que siempre se muestre adecuadamente */
+.news-image {
+    width: 100%;
+    height: 300px; /* Fija la altura para evitar que se salga del contenedor */
+    object-fit: cover; /* Recorta la imagen conservando la relación sin deformación */
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+/* Estilo para los comentarios */
+.comments {
+    margin-top: 10px;
+}
+
+.new-comment {
+    width: 100%;
+    margin-top: 5px;
+}
+
+/* Modal para comentarios */
+#commentsModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    z-index: 1000;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    max-width: 600px;
+    width: 90%;
+    display: none;
+}
+#commentsModal h2 {
+    margin-top: 0;
+}
+#modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+}
+.news-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    padding: 20px;
+  }
+  .main-card {
+    width: 100%;
+    max-width: 800px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    text-align: left;
+  }
+  .text-content { margin-bottom: 10px; }
+  .news-title { margin: 0 0 15px; font-size: 1.8rem; font-weight: bold; }
+  .news-description { margin: 0 0 15px; font-size: 1.1rem; }
+  .news-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-start;
+  }
+  .like-btn, .dislike-btn, .toggle-comments-btn {
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 10px 15px;
+    border: 2px solid transparent;
+    border-radius: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .like-btn i, .dislike-btn i, .toggle-comments-btn i { margin-right: 5px; }
+  .like-btn { background-color: #007bff; color: white; border-color: #007bff; }
+  .like-btn:hover { background-color: #0056b3; border-color: #0056b3; }
+  .dislike-btn { background-color: #dc3545; color: white; border-color: #dc3545; }
+  .dislike-btn:hover { background-color: #c82333; border-color: #c82333; }
+  .toggle-comments-btn { background-color: #28a745; color: white; border-color: #28a745; }
+  .toggle-comments-btn:hover { background-color: #218838; border-color: #218838; }
+  .like-btn:disabled, .dislike-btn:disabled, .toggle-comments-btn:disabled {
+    background-color: #d6d6d6;
+    border-color: #d6d6d6;
+    color: #7a7a7a;
+    cursor: not-allowed;
+  }
+  .news-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+  .comments { margin-top: 10px; }
+  .new-comment { width: 100%; margin-top: 5px; }
+  /* Modal para comentarios */
+  #commentsModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    z-index: 1000;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    max-width: 600px;
+    width: 90%;
+    display: none;
+  }
+  #commentsModal h2 { margin-top: 0; }
+  #modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+  }
+  /* Modal de carga */
+  #loadingModal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  }
+  #loadingModal > div {
+    background: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+    text-align: center;
+  }
+  /* Estilos para cada comentario en el modal */
+  .comment-item {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 0;
+  }
+  .comment-item p { margin: 0; }
+  .comment-item small { color: #555; }
+  .comment-item button {
+    margin-right: 5px;
+    font-size: 0.8rem;
+    padding: 3px 6px;
+  }
+.user-info:hover .logout-menu {
+    display: block;
+}
+.user-info {
+    position: relative;
+    display: inline-block;
+    margin-right: 20px; /* separa del botón Noticias */
+    vertical-align: middle;
+    margin-top: 6px
+}
+
+.username {
+    cursor: pointer;
+    padding: 15px;
+    font-size: 1.2em;
+    color: #fff; /* o el color que uses en el navbar */
+}
+
+/* Dropdown flotante para cerrar sesión */
+.logout-dropdown {
+    position: absolute;
+    top: 120%; /* se muestra debajo del nombre */
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    display: none;
+    z-index: 1000;
+}
+
+.logout-dropdown button {
+    background-color: red;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    padding: 8px 15px;
+    font-size: 0.7em; /* Reducimos el tamaño de la fuente */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    white-space: nowrap; /* Evita que el texto se divida en múltiples líneas */
+    min-width: fit-content; /* Asegura que el botón se ajuste al contenido */
+}
+.loading-text {
+    color: #000000; /* Cambia el color aquí */
+    font-family: 'Press Start 2P', cursive;
+}
+.logout-dropdown button:hover {
+    background-color: darkred;
+}
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 5%;
+    background-color: rgba(13, 13, 13, 0.8);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    font-size: 0.8em;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.navbar-left a {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espacio entre los dos logos */
+}
+
+.logo-image {
+    height: 60px; /* Ajusta el tamaño del logo DevPlay */
+    width: auto;
+}
+
+.small-logo {
+    height: 100px; /* Tamaño reducido del logo Sustainity */
+    width:auto;
+}
+
+
+.navbar-center {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-grow: 1;
+    margin-left: 100px;
+}
+
+.navbar-center a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.navbar-center a:hover {
+    color: #ffa500;
+}
+
+.navbar-right {
+    display: flex;
+    gap: 15px;
+    margin-right: 100px; 
+}
+
+.login-btn,
+.news-btn {
+    padding: 10px 20px;
+    font-size: 0.8em;
+    background: none;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.news-btn {
+    background-color: #ffa500;
+    color: #0d0d0d;
+    border: none;
+}
+
+.login-btn:hover {
+    background-color: #fff;
+    color: #0d0d0d;
+}
+.demo-btn {
+    margin-top: 20px;
+    padding: 25px 20px;
+    font-size: 1rem;
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+    background-color: #581369;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.demo-btn:hover {
+    background-color: #7c0e26;
+    transform: scale(1.05);
+}
+
+.demo-btn:active {
+    transform: scale(0.95);
+}
+
+.news-btn:hover {
+    background: none;
+    color: #fff;
+    border: 2px solid #ffa500;
+}
+.main-card, .trailer-card{
+    width: 100%;
+    max-width: 1300px;
+    height: 500px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    padding: 50px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.2)), url('/public/img/fondo.webp');
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    opacity: 0;
+    transform: translateY(50px);
+    animation: fadeIn 1s forwards;
+    margin-top: 90px;
+}
+
+
+.text-content{
+    max-width: 50%;
+    z-index: 1;
+    
+}
+.text-content-left {
+    max-width: 50%;
+    z-index: 1;
+    text-align: center;
+}
+.text-content-left {
+    order: 1;
+    
+    padding-right: right; /* Aumentado para más espacio */
+}
+
+.video-content {
+    max-width: 60%; /* Más grande */
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+    align-items: center;
+}
+
+.video-content video {
+    width: 100%;
+    height: 350px; /* Aumentado para mayor tamaño */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+   
+}
+
+h1, h2 {
+    font-size: 2.5em;
+    color: #ffcb05;
+}
+
+p {
+    font-size: 1em;
+    line-height: 1.5;
+}
+
+.play-btn {
+    padding: 12px 24px;
+    font-size: 1em;
+    background-color: #ff5722;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.play-btn:hover {
+    background-color: #e64a19;
+}
+
+.character-image {
+    position: absolute;
+    right: -80px;
+    top: -150px;
+    width: 500px;
+    height: auto;
+    z-index: 2;
+    transform: rotate(10deg);
+    image-rendering: pixelated;
+}
+
+/* Animación para la aparición */
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.appear-on-load {
+    animation-delay: 0.5s;
+}
+
+.card-section {
+    text-align: center;
+    margin-top: 100px;
+    color: #fff;
+}
+
+.card-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.card {
+    width: 350px;
+    height: 550px;
+    background-color: transparent;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(100px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.card.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.card img {
+    position: absolute;
+    width: 350px;
+    height: auto;
+  
+    object-fit: contain;
+    transform: rotate(-5deg);
+    image-rendering: pixelated;
+}
+
+.footer {
+    width: 100%;
+    background-color: #111;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.8em;
+    margin-top: 50px;
+    border-top: 2px solid #333;
+}
+
+.footer-content {
+    margin-bottom: 10px;
+}
+
+.footer-content a {
+    color: #ffcb05;
+    text-decoration: none;
+    margin: 0 10px;
+    transition: color 0.3s;
+}
+
+.footer-content a:hover {
+    color: #ff5722;
+}
+
+.donation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 300px;
+}
+.donation-form input,
+.donation-form select {
+    padding: 10px;
+    font-size: 0.8em;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 2px solid #ffcb05;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+}
+.donation-form input::placeholder,
+.donation-form select {
+    color: rgba(255, 255, 255, 0.7);
+}
+.donation-form select option {
+    background-color: #1a1a1a;
+}
+.donation-form label {
+    font-size: 0.8em;
+    color: #ffcb05;
+}
+.play-btn {
+    margin-top: 10px;
+}
+.payment-buttons {
+    display: none;
+}
+.payment-buttons.active {
+    display: block;
+}
+.payment-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 0.8em;
+    text-align: center;
+    background-color: #ffcb05;
+    color: #1a1a1a;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+}
+.payment-button:hover {
+    background-color: #ffd700;
+}
+.alert {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    width: 100%;
+    position: fixed;
+    top: 80px;
+    z-index: 1001;
+}
+
+.info-btn {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.info-btn:hover {
+    background-color: #45a049;
+}
+
+.main-card img{
+    margin-left: 100px;
+    width: 700px;
+}
+
+.development-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    text-align: center;
+    padding: 20px;
+    margin-top: 80px;
+}
+
+.development-card {
+    width: 100%;
+    max-width: 800px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    border: 2px solid #581369;
+}
+
+.development-title {
+    font-size: 2em;
+    color: #ffcb05;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.development-message {
+    font-size: 1em;
+    line-height: 1.8;
+    margin-bottom: 30px;
+}
+
+.development-image {
+    width: 200px;
+    height: auto;
+    margin: 20px 0;
+    image-rendering: pixelated;
+}
+
+.return-btn {
+    padding: 15px 25px;
+    font-size: 1rem;
+    font-family: 'Press Start 2P', cursive;
+    color: #fff;
+    background-color: #581369;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 20px;
+}
+
+.return-btn:hover {
+    background-color: #7c0e26;
+    transform: scale(1.05);
+}
+
+.pixel-animation {
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, #581369, #ffcb05, #581369);
+    margin: 30px 0;
+    animation: pixelMove 3s infinite linear;
+    border-radius: 3px;
+}
+
+@keyframes pixelMove {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+/* RESPONSIVE DESIGN - MÓVIL */
+@media (max-width: 768px) {
+    /* Navbar móvil */
+    .navbar {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+        height: auto;
+    }
+    
+    .navbar-left {
+        margin-bottom: 10px;
+    }
+    
+    .logo-image {
+        height: 40px;
+    }
+    
+    .small-logo {
+        height: 60px;
+    }
+    
+    .navbar-center {
+        gap: 15px;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .navbar-center a {
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+    
+    .navbar-right {
+        gap: 10px;
+        margin-right: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .login-btn, .news-btn {
+        padding: 8px 15px;
+        font-size: 0.7em;
+    }
+    
+    /* Main card móvil */
+    .main-card, .trailer-card {
+        flex-direction: column;
+        height: auto;
+        padding: 20px;
+        margin-top: 120px;
+        text-align: center;
+    }
+    
+    .text-content {
+        max-width: 100%;
+        order: 2;
+        margin-top: 20px;
+    }
+    
+    .text-content h1 {
+        font-size: 1.8em;
+    }
+    
+    .text-content p {
+        font-size: 0.8em;
+    }
+    
+    .character-image {
+        position: relative;
+        right: 0;
+        top: 0;
+        width: 300px;
+        transform: none;
+        order: 1;
+        margin: 0 auto;
+    }
+    
+    .demo-btn {
+        padding: 15px 20px;
+        font-size: 0.8em;
+    }
+    
+    /* Trailer card móvil */
+    .text-content-left {
+        max-width: 100%;
+        order: 1;
+        padding-right: 0;
+        margin-bottom: 20px;
+    }
+    
+    .video-content {
+        max-width: 100%;
+        order: 2;
+        padding: 10px;
+    }
+    
+    .video-content video {
+        height: 200px;
+    }
+    
+    /* Card section móvil */
+    .card-section {
+        margin-top: 50px;
+        padding: 0 20px;
+    }
+    
+    .card-section h2 {
+        font-size: 1.5em;
+    }
+    
+    .card-section p {
+        font-size: 0.8em;
+    }
+    
+    .card-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+    
+    .card {
+        width: 280px;
+        height: 400px;
+    }
+    
+    .card img {
+        width: 280px;
+    }
+    
+    /* Development container móvil */
+    .development-container {
+        padding: 20px 10px;
+        margin-top: 100px;
+    }
+    
+    .development-card {
+        padding: 20px;
+        margin: 0 10px;
+    }
+    
+    .development-title {
+        font-size: 1.5em;
+    }
+    
+    .development-message {
+        font-size: 0.8em;
+    }
+    
+    .development-image {
+        width: 150px;
+    }
+    
+    .return-btn {
+        padding: 12px 20px;
+        font-size: 0.8em;
+    }
+    
+    /* User info móvil */
+    .user-info {
+        margin-right: 0;
+        margin-top: 0;
+    }
+    
+    .username {
+        font-size: 0.8em;
+        padding: 10px;
+    }
+    
+    .logout-dropdown {
+        right: -10px;
+    }
+    
+    /* Main card imagen móvil */
+    .main-card img {
+        margin-left: 0;
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    /* Footer móvil */
+    .footer {
+        padding: 15px 10px;
+        font-size: 0.6em;
+    }
+    
+    .footer-content a {
+        margin: 0 5px;
+        display: inline-block;
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Ajustes para pantallas muy pequeñas */
+    .main-card, .trailer-card {
+        margin-top: 140px;
+        padding: 15px;
+    }
+    
+    .text-content h1 {
+        font-size: 1.5em;
+    }
+    
+    .character-image {
+        width: 250px;
+    }
+    
+    .card {
+        width: 250px;
+        height: 350px;
+    }
+    
+    .card img {
+        width: 250px;
+    }
+    
+    .development-title {
+        font-size: 1.2em;
+    }
+    
+    .navbar-center a {
+        font-size: 0.6em;
+    }
+    
+    .login-btn, .news-btn {
+        font-size: 0.6em;
+        padding: 6px 12px;
+    }
+    
+    .video-content video {
+        height: 150px;
+    }
+}
+
+@media (max-width: 360px) {
+    /* Ajustes para pantallas extra pequeñas */
+    .character-image {
+        width: 200px;
+    }
+    
+    .card {
+        width: 220px;
+        height: 320px;
+    }
+    
+    .card img {
+        width: 220px;
+    }
+    
+    .text-content h1 {
+        font-size: 1.3em;
+    }
+    
+    .development-card {
+        padding: 15px;
+    }
+}
+
