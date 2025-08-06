@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
 use App\Http\Controllers\Api\NewsController;
+use App\Http\Controllers\NoticiasController; // Agregar esta línea
 
 
 Route::get('/', function () {
@@ -61,18 +62,25 @@ Route::get('/donativos/create', [donativoController::class, 'create'])->name('ru
 Route::post('/donativos', [donativoController::class, 'store'])->name('rutaDonar');
 Route::get('/donativos', [donativoController::class, 'index'])->name('enviarDonativo');
 
-Route::get('/crear_cuenta/create', [crearcuentaController::class, 'create'])->name('rutaCrear');
+/* Route::get('/crear_cuenta/create', [crearcuentaController::class, 'create'])->name('rutaCrear');
 Route::post('/CrearCuenta', [crearcuentaController::class, 'store'])->name('rutaCrearCuenta');
-Route::get('/CrearCuenta', [crearcuentaController::class, 'index'])->name('rutaCrear');
+Route::get('/CrearCuenta', [crearcuentaController::class, 'index'])->name('rutaCrear'); */
 
 Route::get('/nosotros/create', [nosotrosController::class, 'create'])->name('rutaInfo');
 Route::post('/nosotros/create', [nosotrosController::class, 'store'])->name('rutaInfo');
 Route::get('/nosotros', [nosotrosController::class, 'index'])->name('enviarInfo');
 
-Route::get('/login/create', [loginController::class, 'create'])->name('rutaLogin');
+/* Route::get('/login/create', [loginController::class, 'create'])->name('rutaLogin');
 Route::post('/Login', [loginController::class, 'store'])->name('rutaLogin');
 Route::get('/Login', [loginController::class, 'index'])->name('rutaLog');
+Route::get('/logout', [loginController::class, 'logout'])->name('rutaLogout'); */
+
+Route::get('/Login', [loginController::class, 'index'])->name('rutaLogin');
+Route::post('/Login', [loginController::class, 'store'])->name('rutaLoginPost');
 Route::get('/logout', [loginController::class, 'logout'])->name('rutaLogout');
+
+Route::get('/CrearCuenta', [crearcuentaController::class, 'index'])->name('rutaCrear');
+Route::post('/CrearCuenta', [crearcuentaController::class, 'store'])->name('rutaCrearCuenta');
 
 Route::get('/Consultar', [consultarController::class, 'index'])->name('rutaConsultar');
 Route::get('/Consultar/{id}/edit',[consultarController::class,'edit'])->name('rutaFormConsulta');
@@ -90,28 +98,49 @@ Route::get('/donar', function () {
 
 // Ruta para manejar el pago con Stripe
 Route::post('/checkout', function (Request $request) {
-    Stripe::setApiKey(env('STRIPE_SECRET'));
+    try {
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+        
+        // Fix para SSL en desarrollo
+        if (env('APP_ENV') === 'local') {
+            Stripe::setVerifySslCerts(false);
+        }
 
-    // Crear una sesión de pago con Stripe
-    $session = Session::create([
-        'payment_method_types' => ['card'],
-        'mode' => 'payment',
-        'line_items' => [[
-            'price_data' => [
-                'currency' => 'mxn',
-                'product_data' => [
-                    'name' => 'Donación',
+        // Validar amount
+        $amount = $request->input('amount');
+        if (!$amount || $amount <= 0) {
+            return redirect()->back()->with('error', 'Cantidad inválida');
+        }
+
+        // Crear una sesión de pago con Stripe
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'mode' => 'payment',
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'mxn',
+                    'product_data' => [
+                        'name' => 'Donación Sustainity',
+                        'description' => 'Apoya nuestro proyecto educativo'
+                    ],
+                    'unit_amount' => $amount * 100, // Convierte a centavos
                 ],
-                'unit_amount' => $request->amount * 100, // Convierte a centavos
-            ],
-            'quantity' => 1,
-        ]],
-        'success_url' => url('/gracias'), // URL de éxito
-        'cancel_url' => url('/cancelado'), // URL de cancelación
-    ]);
+                'quantity' => 1,
+            ]],
+            'success_url' => url('/gracias?session_id={CHECKOUT_SESSION_ID}'),
+            'cancel_url' => url('/cancelado'),
+            'metadata' => [
+                'donation_amount' => $amount,
+                'currency' => 'mxn'
+            ]
+        ]);
 
-    // Redirigir al usuario a la página de pago de Stripe
-    return redirect($session->url);
+        // Redirigir al usuario a la página de pago de Stripe
+        return redirect($session->url);
+        
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Error al procesar el pago: ' . $e->getMessage());
+    }
 })->name('rutaCheckout');
 
 // Ruta para la página de agradecimiento (éxito)
@@ -133,3 +162,51 @@ Route::get('/test-db', function () {
         dd("Error de conexión: " . $e->getMessage());
     }
 });
+
+// Agregar estas rutas para noticias - usando base de datos local
+Route::get('/noticias', [NoticiasController::class, 'index'])->name('rutaNoticias');
+
+// API routes para likes/dislikes/comentarios
+Route::post('/news/posts/{postId}/like', [NoticiasController::class, 'like']);
+Route::delete('/news/posts/{postId}/like', [NoticiasController::class, 'like']);
+Route::post('/news/posts/{postId}/dislike', [NoticiasController::class, 'dislike']);
+Route::delete('/news/posts/{postId}/dislike', [NoticiasController::class, 'dislike']);
+Route::get('/news/posts/{postId}/comments', [NoticiasController::class, 'getComments']);
+Route::post('/news/posts/{postId}/comments', [NoticiasController::class, 'postComment']);
+Route::put('/news/comments/{commentId}', [NoticiasController::class, 'updateComment']);
+Route::delete('/news/comments/{commentId}', [NoticiasController::class, 'deleteComment']);
+
+/* Route::post('/create-checkout-session', function (Request $request) {
+    Stripe::setApiKey(env('STRIPE_SECRET'));
+    
+    // Fix para SSL en desarrollo
+    if (env('APP_ENV') === 'local') {
+        Stripe::setVerifySslCerts(false);
+    }
+    
+    try {
+        $amount = $request->input('amount', 5);
+        $amountInCents = $amount * 100;
+
+        $session = Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => 'usd',
+                    'product_data' => [
+                        'name' => 'Donativo Sustainity',
+                    ],
+                    'unit_amount' => $amountInCents,
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => route('rutaDonativos') . '?success=true',
+            'cancel_url' => route('rutaDonativos') . '?canceled=true',
+        ]);
+
+        return response()->json(['url' => $session->url]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}); */

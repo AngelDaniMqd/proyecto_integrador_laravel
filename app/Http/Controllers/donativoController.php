@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Requests\validadorDonativo;
+use Stripe\Stripe;
+use Stripe\Checkout\Session;
 
 class donativoController extends Controller
 {
@@ -72,5 +74,51 @@ class donativoController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function __construct()
+    {
+        // Configurar Stripe
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+        
+        // Fix para SSL en desarrollo (temporal)
+        if (env('APP_ENV') === 'local') {
+            Stripe::setVerifySslCerts(false);
+        }
+    }
+
+    public function createCheckoutSession(Request $request)
+    {
+        try {
+            // Validar cantidad
+            $amount = $request->input('amount', 5); // Default $5
+            $amountInCents = $amount * 100; // Stripe usa centavos
+
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'usd',
+                        'product_data' => [
+                            'name' => 'Donativo Sustainity',
+                            'description' => 'Apoya nuestro proyecto de videojuegos educativos',
+                        ],
+                        'unit_amount' => $amountInCents,
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => route('rutaDonativos') . '?success=true',
+                'cancel_url' => route('rutaDonativos') . '?canceled=true',
+                'metadata' => [
+                    'donation_amount' => $amount,
+                    'project' => 'Sustainity'
+                ]
+            ]);
+
+            return response()->json(['url' => $session->url]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

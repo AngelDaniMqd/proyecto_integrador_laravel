@@ -459,3 +459,202 @@ small {
     margin-top: 3px;
     margin-bottom: 5px;
 }
+
+/* RESPONSIVE DESIGN - MÓVIL */
+@media (max-width: 768px) {
+    /* Navbar móvil */
+    .navbar {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+        height: auto;
+    }
+    
+    .navbar-left {
+        margin-bottom: 10px;
+    }
+    
+    .logo-image {
+        height: 40px;
+    }
+    
+    .small-logo {
+        height: 60px;
+    }
+    
+    .navbar-center {
+        gap: 15px;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .navbar-center a {
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+    
+    .navbar-right {
+        gap: 10px;
+        margin-right: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .login-btn, .news-btn {
+        padding: 8px 15px;
+        font-size: 0.7em;
+    }
+    
+    /* Contenido principal responsivo */
+    .main-card, .trailer-card {
+        margin-top: 140px;
+        padding: 20px;
+        flex-direction: column;
+        height: auto;
+        text-align: center;
+        align-items: center;
+    }
+    
+    /* Separar texto con más espacio */
+    .text-content, .text-content-left {
+        max-width: 100%;
+        padding: 0;
+        margin-bottom: 60px; /* Aún más espacio después del texto */
+        order: 1; /* Texto primero */
+    }
+    
+    .text-content h1 {
+        margin-bottom: 30px; /* Más espacio entre título y párrafo */
+    }
+    
+    .text-content p {
+        margin-bottom: 0; /* Sin margen después del párrafo */
+    }
+    
+    /* Hacer que la imagen character-image se comporte como elemento normal */
+    .character-image {
+        position: static !important; /* Quitar posición absoluta */
+        width: 100% !important;
+        max-width: 280px !important;
+        height: auto !important;
+        margin: 60px auto !important; /* Más margen y centrado */
+        order: 2 !important; /* Imagen segunda */
+        transform: none !important; /* Quitar rotación */
+        right: auto !important;
+        top: auto !important;
+        display: block !important;
+    }
+    
+    /* Formulario de donación más separado */
+    .donation-form {
+        max-width: 90%;
+        margin-top: 60px; /* Más separación del contenido anterior */
+        order: 3; /* Formulario al final */
+    }
+    
+    .video-content {
+        max-width: 100%;
+        padding: 20px 0;
+        order: 2;
+    }
+    
+    .video-content video {
+        height: 200px;
+    }
+    
+    /* Cards responsivas */
+    .card-container {
+        flex-direction: column;
+        align-items: center;
+        margin-top: 40px;
+    }
+    
+    .card {
+        width: 280px;
+        height: 450px;
+        margin-bottom: 20px;
+    }
+    
+    .card img {
+        width: 280px;
+    }
+    
+    /* User info responsivo */
+    .user-info {
+        margin-right: 0;
+    }
+    
+    .username {
+        font-size: 0.8em;
+        padding: 10px;
+    }
+    
+    .logout-dropdown {
+        right: -10px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Ajustes para pantallas muy pequeñas */
+    .main-card, .trailer-card {
+        margin-top: 140px;
+        padding: 15px;
+    }
+    
+    /* Aún más separación en móviles pequeños */
+    .text-content, .text-content-left {
+        margin-bottom: 70px; /* Más espacio después del texto */
+    }
+    
+    .text-content h1 {
+        margin-bottom: 35px; /* Más espacio entre título y párrafo */
+    }
+    
+    .character-image {
+        max-width: 250px !important;
+        margin: 70px auto !important; /* Aún más margen para la imagen */
+    }
+    
+    .donation-form {
+        margin-top: 70px; /* Más separación para el formulario */
+    }
+    
+    h1, h2 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+    
+    p {
+        font-size: 0.8em;
+        margin-bottom: 15px;
+    }
+    
+    .play-btn {
+        padding: 10px 20px;
+        font-size: 0.8em;
+        margin: 15px 0;
+    }
+    
+    .card {
+        width: 250px;
+        height: 400px;
+    }
+    
+    .card img {
+        width: 250px;
+    }
+    
+    .donation-form input,
+    .donation-form select,
+    .payment-fields input,
+    .payment-fields select {
+        font-size: 0.7em;
+        padding: 8px;
+    }
+    
+    .payment-button {
+        font-size: 0.7em;
+        padding: 8px;
+    }
+}

@@ -3,76 +3,61 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
-use App\Http\Requests\validadorLogin;
+use Illuminate\Support\Facades\Hash;
 
 class loginController extends Controller
 {
+    public function index()
+    {
+        return view('Login');
+    }
+
     public function create()
     {
         return view('Login');
     }
-    
-    public function store(validadorLogin $request)
+
+    public function store(Request $request)
     {
-        // Realiza la petición al endpoint de FastAPI
-        $response = Http::withoutVerifying()->post('https://api-yovy.onrender.com/login', [
-            'email'    => $request->email,
-            'password' => $request->contraseña,
+        // Validar los datos de entrada
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        if ($response->successful()) {
-            $data = $response->json();
-            if (isset($data['token']) && isset($data['usuario'])) {
-                // Guarda en sesión que el usuario está logueado, el token, el username y el id del usuario
+        try {
+            // Buscar usuario en la tabla tbusers
+            $user = DB::table('tbusers')
+                ->where('username', $request->username)
+                ->orWhere('email', $request->username) // Permitir login con email también
+                ->first();
+
+            if ($user && Hash::check($request->password, $user->password)) {
+                // Login exitoso - crear sesión
                 session([
                     'logged_in' => true,
-                    'authToken' => $data['token'],
-                    'username'  => $data['usuario']['username'],
-                    'user_id'   => $data['usuario']['id'],  // Asegúrate de que la API retorne el id
+                    'user_id' => $user->id,
+                    'username' => $user->username,
+                    'email' => $user->email ?? null
                 ]);
+
                 return redirect()->route('rutaInicio')->with('message', 'Inicio de sesión exitoso');
+            } else {
+                // Credenciales incorrectas
+                return redirect()->route('rutaLogin')->with('error', 'Usuario o contraseña incorrectos');
             }
+        } catch (\Exception $e) {
+            return redirect()->route('rutaLogin')->with('error', 'Error en el servidor: ' . $e->getMessage());
         }
-
-        return back()->withErrors(['email' => 'Las credenciales son incorrectas.'])->withInput();
-    }
-    
-    /**
-     * Otros métodos.
-     */
-    public function index()
-    {
-        // Cambiar de 'usuarios' a 'tbusers'
-        $consultaCuentas = DB::table('tbusers')->get();
-        return view('login', compact('consultaCuentas'));
     }
 
-    public function show(string $id)
+    public function logout()
     {
-        //
-    }
+        // Eliminar todas las variables de sesión relacionadas con el login
+        session()->forget(['logged_in', 'user_id', 'username', 'email']);
+        session()->flush();
 
-    public function edit(string $id)
-    {
-        //
-    }
-
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    public function logout(Request $request)
-    {
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect()->route('rutaInicio')->with('message', 'Sesión cerrada');
+        return redirect()->route('rutaInicio')->with('message', 'Sesión cerrada exitosamente');
     }
 }

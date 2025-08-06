@@ -287,6 +287,105 @@ input[type="text"]:focus {
     color: #ff5722;
 }
 
+/* RESPONSIVE DESIGN - MÓVIL */
+@media (max-width: 768px) {
+    /* Navbar móvil */
+    .navbar {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+        height: auto;
+    }
+    
+    .navbar-left {
+        margin-bottom: 10px;
+    }
+    
+    .logo-image {
+        height: 40px;
+    }
+    
+    .small-logo {
+        height: 60px;
+    }
+    
+    .navbar-center {
+        gap: 15px;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .navbar-center a {
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+    
+    .navbar-right {
+        gap: 10px;
+        margin-right: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .login-btn, .news-btn {
+        padding: 8px 15px;
+        font-size: 0.7em;
+    }
+    
+    /* Ajuste para el contenido principal */
+    .main-card {
+        margin-top: 140px;
+        padding: 20px;
+        width: 90%;
+    }
+    
+    /* User info responsivo */
+    .user-info {
+        margin-right: 0;
+    }
+    
+    .username {
+        font-size: 0.8em;
+        padding: 10px;
+    }
+    
+    .logout-dropdown {
+        right: -10px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Ajustes para pantallas muy pequeñas */
+    .main-card {
+        margin-top: 140px;
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+    }
+    
+    h2 {
+        font-size: 1.2em;
+    }
+    
+    p, ul, ol, label {
+        font-size: 0.8em;
+    }
+    
+    input[type="text"] {
+        width: 90%;
+        padding: 10px;
+        font-size: 0.7em;
+    }
+    
+    .info-btn {
+        padding: 12px 25px;
+        font-size: 0.8em;
+    }
+}
+
 @keyframes fadeIn {
     0% { opacity: 0; }
     100% { opacity: 1; }

@@ -603,3 +603,331 @@ small.text-danger {
     align-items: center;
     justify-content: center;
   }
+/* RESPONSIVE DESIGN - MÓVIL */
+@media (max-width: 768px) {
+    /* Navbar móvil */
+    .navbar {
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+        height: auto;
+    }
+    
+    .navbar-left {
+        margin-bottom: 10px;
+    }
+    
+    .logo-image {
+        height: 40px;
+    }
+    
+    .navbar-center {
+        gap: 15px;
+        margin-left: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .navbar-center a {
+        font-size: 0.7em;
+        padding: 5px 10px;
+    }
+    
+    .navbar-right {
+        gap: 10px;
+        margin-right: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .login-btn, .news-btn {
+        padding: 8px 15px;
+        font-size: 0.7em;
+    }
+    
+    /* Contenido principal responsivo - ACTUALIZADO */
+    .main-card {
+        margin-top: 140px;
+        padding: 20px;
+        flex-direction: column;
+        height: auto;
+        text-align: center;
+        align-items: center;
+        width: 95%; /* Ajustar ancho en móvil */
+        max-width: 400px; /* Limitar ancho máximo */
+    }
+    
+    /* Separar imagen del texto */
+    .character-image {
+        position: static !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        height: auto !important;
+        margin: 30px auto !important;
+        order: 2 !important;
+        transform: none !important;
+        right: auto !important;
+        top: auto !important;
+        display: block !important;
+    }
+    
+    .text-content {
+        max-width: 100%;
+        padding: 0;
+        margin-bottom: 20px;
+        order: 1;
+    }
+    
+    /* Formulario responsivo - MEJORADO */
+    .donation-form {
+        max-width: 100%;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .donation-form input,
+    .donation-form select {
+        font-size: 0.8em;
+        padding: 15px 12px; /* Más padding para móvil */
+        width: 100%;
+        max-width: 100%; /* Usar todo el ancho disponible */
+        box-sizing: border-box;
+        margin-bottom: 15px; /* Más espacio entre campos */
+        border-radius: 8px; /* Bordes más redondeados */
+        border: 2px solid #ffcb05;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-family: 'Press Start 2P', cursive;
+        text-align: left; /* Alineación a la izquierda en móvil */
+    }
+    
+    .donation-form input:focus,
+    .donation-form select:focus {
+        outline: none;
+        border-color: #ff5722;
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .donation-form label {
+        font-size: 0.7em;
+        color: #ffcb05;
+        margin-bottom: 8px;
+        margin-top: 15px;
+        display: block;
+        text-align: left;
+        width: 100%;
+        padding: 0;
+    }
+    
+    /* Campo de contraseña mejorado */
+    .password-field-container {
+        position: relative;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .password-field-container input {
+        padding-right: 60px; /* Espacio para el botón */
+        margin-bottom: 0;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #ffcb05;
+        font-size: 0.6em;
+        cursor: pointer;
+        padding: 8px;
+        font-family: 'Press Start 2P', cursive;
+        z-index: 10;
+    }
+    
+    .password-toggle:hover {
+        color: #ff5722;
+    }
+    
+    /* Botón de submit mejorado */
+    .play-btn {
+        font-size: 0.8em;
+        padding: 15px 25px;
+        width: 100%;
+        margin-top: 20px;
+        border-radius: 8px;
+        background-color: #ff5722;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Press Start 2P', cursive;
+    }
+    
+    .play-btn:hover {
+        background-color: #e64a19;
+        transform: translateY(-2px);
+    }
+    
+    /* Mensajes de error responsivos */
+    small.text-danger {
+        font-size: 0.6em;
+        color: #ff5722;
+        display: block;
+        margin-bottom: 10px;
+        margin-top: -10px;
+        text-align: left;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    /* Link de crear cuenta */
+    .create-account-link {
+        font-size: 0.7em;
+        color: #ffcb05;
+        text-decoration: none;
+        margin-top: 20px;
+        display: inline-block;
+        transition: color 0.3s;
+    }
+    
+    .create-account-link:hover {
+        color: #ff5722;
+    }
+    
+    /* Medidor de fuerza de contraseña responsivo */
+    .password-strength-meter {
+        width: 100%;
+        max-width: 100%;
+        margin: 10px 0;
+    }
+    
+    .password-feedback {
+        font-size: 0.6em;
+        max-width: 100%;
+        text-align: left;
+    }
+    
+    /* ...existing responsive code... */
+}
+
+@media (max-width: 480px) {
+    /* Ajustes para pantallas muy pequeñas - ACTUALIZADO */
+    .main-card {
+        margin-top: 140px;
+        padding: 15px;
+        width: 98%;
+        max-width: 350px;
+    }
+    
+    /* Formulario en pantallas muy pequeñas */
+    .donation-form input,
+    .donation-form select {
+        font-size: 0.7em;
+        padding: 12px 10px;
+        margin-bottom: 12px;
+    }
+    
+    .donation-form label {
+        font-size: 0.6em;
+        margin-bottom: 6px;
+        margin-top: 12px;
+    }
+    
+    .password-field-container input {
+        padding-right: 55px;
+    }
+    
+    .password-toggle {
+        font-size: 0.5em;
+        right: 12px;
+        padding: 6px;
+    }
+    
+    .play-btn {
+        font-size: 0.7em;
+        padding: 12px 20px;
+        margin-top: 15px;
+    }
+    
+    small.text-danger {
+        font-size: 0.5em;
+        margin-top: -8px;
+        margin-bottom: 8px;
+    }
+    
+    .create-account-link {
+        font-size: 0.6em;
+        margin-top: 15px;
+    }
+    
+    h1 {
+        font-size: 1.3em;
+        margin-bottom: 20px;
+    }
+    
+    /* ...existing small screen code... */
+}
+
+/* Mejoras para inputs específicos */
+@media (max-width: 768px) {
+    .donation-form input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9em;
+    }
+    
+    .donation-form input::-webkit-outer-spin-button,
+    .donation-form input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    .donation-form input[type=number] {
+        -moz-appearance: textfield;
+    }
+}
+
+/* Mejoras para landscape en móvil - FORMULARIO */
+@media (max-width: 768px) and (orientation: landscape) {
+    .main-card {
+        flex-direction: row;
+        align-items: flex-start;
+        padding: 15px;
+        max-width: 90%;
+    }
+    
+    .text-content {
+        max-width: 50%;
+        margin-bottom: 0;
+        margin-right: 20px;
+    }
+    
+    .donation-form {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .donation-form input,
+    .donation-form select {
+        font-size: 0.7em;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .donation-form label {
+        font-size: 0.6em;
+        margin-top: 10px;
+        margin-bottom: 5px;
+    }
+    
+    .play-btn {
+        padding: 10px 20px;
+        margin-top: 15px;
+    }
+    
+    h1 {
+        font-size: 1.2em;
+        margin-bottom: 15px;
+    }
+}

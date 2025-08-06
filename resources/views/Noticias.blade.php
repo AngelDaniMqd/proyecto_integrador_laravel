@@ -103,7 +103,7 @@
   <!-- Script para likes/dislikes y comentarios -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
-      const baseUrl = "https://api-yovy.onrender.com";
+      const baseUrl = "{{ url('/') }}"; // Cambiar a URL base de Laravel
       const userId = "{{ session('user_id') ?? 'null' }}";
       if (userId === "null") {
         console.warn("El usuario no está logueado; user_id es null.");
@@ -122,7 +122,10 @@
         try {
           const response = await fetch(url, {
             method: method,
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            headers: { 
+              "Content-Type": "application/x-www-form-urlencoded",
+              "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
             body: bodyData
           });
           return await response.json();
@@ -136,7 +139,6 @@
         const postId = button.getAttribute("data-post-id");
         if (!postId) return;
         const bodyData = `user_id=${userId}`;
-        // Botón de dislike del mismo post (si existe)
         const dislikeButton = document.querySelector(`.dislike-btn[data-post-id="${postId}"]`);
 
         showLoading();
@@ -145,20 +147,20 @@
             button.classList.remove("active");
             let likeCountElem = button.querySelector(".like-count");
             likeCountElem.textContent = parseInt(likeCountElem.textContent) - 1;
-            await sendRequest("DELETE", `${baseUrl}/news/news/posts/${postId}/like`, bodyData);
+            await sendRequest("DELETE", `${baseUrl}/news/posts/${postId}/like`, bodyData);
             console.log("Like eliminado");
           } else {
             if (dislikeButton && dislikeButton.classList.contains("active")) {
               dislikeButton.classList.remove("active");
               let dislikeCountElem = dislikeButton.querySelector(".dislike-count");
               dislikeCountElem.textContent = parseInt(dislikeCountElem.textContent) - 1;
-              await sendRequest("DELETE", `${baseUrl}/news/news/posts/${postId}/dislike`, bodyData);
+              await sendRequest("DELETE", `${baseUrl}/news/posts/${postId}/dislike`, bodyData);
               console.log("Dislike eliminado para dar like");
             }
             button.classList.add("active");
             let likeCountElem = button.querySelector(".like-count");
             likeCountElem.textContent = parseInt(likeCountElem.textContent) + 1;
-            await sendRequest("POST", `${baseUrl}/news/news/posts/${postId}/like`, bodyData);
+            await sendRequest("POST", `${baseUrl}/news/posts/${postId}/like`, bodyData);
             console.log("Like registrado");
           }
         } catch (error) {
@@ -180,20 +182,20 @@
             button.classList.remove("active");
             let dislikeCountElem = button.querySelector(".dislike-count");
             dislikeCountElem.textContent = parseInt(dislikeCountElem.textContent) - 1;
-            await sendRequest("DELETE", `${baseUrl}/news/news/posts/${postId}/dislike`, bodyData);
+            await sendRequest("DELETE", `${baseUrl}/news/posts/${postId}/dislike`, bodyData);
             console.log("Dislike eliminado");
           } else {
             if (likeButton && likeButton.classList.contains("active")) {
               likeButton.classList.remove("active");
               let likeCountElem = likeButton.querySelector(".like-count");
               likeCountElem.textContent = parseInt(likeCountElem.textContent) - 1;
-              await sendRequest("DELETE", `${baseUrl}/news/news/posts/${postId}/like`, bodyData);
+              await sendRequest("DELETE", `${baseUrl}/news/posts/${postId}/like`, bodyData);
               console.log("Like eliminado para dar dislike");
             }
             button.classList.add("active");
             let dislikeCountElem = button.querySelector(".dislike-count");
             dislikeCountElem.textContent = parseInt(dislikeCountElem.textContent) + 1;
-            await sendRequest("POST", `${baseUrl}/news/news/posts/${postId}/dislike`, bodyData);
+            await sendRequest("POST", `${baseUrl}/news/posts/${postId}/dislike`, bodyData);
             console.log("Dislike registrado");
           }
         } catch (error) {
@@ -224,31 +226,29 @@
       });
 
       // --- Modal de Comentarios ---
-      // Abre el modal y carga comentarios para el post
       function openCommentsModal(postId) {
         document.getElementById("commentsModal").dataset.postId = postId;
         document.getElementById("commentsModal").style.display = "block";
         document.getElementById("modalOverlay").style.display = "block";
         loadComments(postId);
       }
-      // Cierra el modal de comentarios
+
       function closeCommentsModal() {
         document.getElementById("commentsModal").style.display = "none";
         document.getElementById("modalOverlay").style.display = "none";
       }
-      // Carga los comentarios de un post y los muestra en el modal
+
       async function loadComments(postId) {
         try {
-          const response = await fetch(`${baseUrl}/news/news/posts/${postId}/comments`);
+          const response = await fetch(`${baseUrl}/news/posts/${postId}/comments`);
           const comments = await response.json();
           const list = document.getElementById("modalCommentsList");
-          list.innerHTML = ""; // Limpia la lista anterior
+          list.innerHTML = "";
           comments.forEach(comment => {
             const commentDiv = document.createElement("div");
             commentDiv.classList.add("comment-item");
-            commentDiv.style.position = "relative"; // Para posicionar el menú
+            commentDiv.style.position = "relative";
 
-            // Formatea la fecha
             const createdAt = new Date(comment.created_at);
             const formattedDate = createdAt.toLocaleDateString('es-ES', { 
                 day: '2-digit', month: 'short', year: 'numeric' 
@@ -262,84 +262,83 @@
               <small>Por: ${comment.user.username || comment.user.id} ${comment.created_at ? "- " + formattedDate : ""}</small>
             `;
             
-            // Si el comentario fue hecho por el usuario logueado, se añaden los controles de edición y eliminación
             if (parseInt(comment.user.id) === parseInt(userId)) {
-              // Botón de opciones (tres puntitos), con nuevo color y tamaño:
               const optionsBtn = document.createElement("span");
               optionsBtn.textContent = "⋮";
               optionsBtn.style.cursor = "pointer";
               optionsBtn.style.position = "absolute";
               optionsBtn.style.top = "5px";
               optionsBtn.style.right = "5px";
-              optionsBtn.style.fontSize = "1.5em"; // Más grande
-              optionsBtn.style.color = "#3f51b5"; // Azul bonito
+              optionsBtn.style.fontSize = "1.5em";
+              optionsBtn.style.color = "#3f51b5";
 
-              // Menú de opciones: se muestra debajo con fondo azul suave
               const optionsMenu = document.createElement("div");
               optionsMenu.style.display = "none";
               optionsMenu.style.position = "absolute";
               optionsMenu.style.top = "30px";
               optionsMenu.style.right = "5px";
-              optionsMenu.style.background = "white"; // Azul
+              optionsMenu.style.background = "white";
               optionsMenu.style.padding = "8px";
               optionsMenu.style.borderRadius = "5px";
               optionsMenu.style.zIndex = "10";
               
-              // Botón editar: fondo amarillo y botones más grandes
               const editBtn = document.createElement("button");
               editBtn.textContent = "Editar";
               editBtn.style.fontSize = "0.9em";
               editBtn.style.padding = "8px 12px";
               editBtn.style.marginBottom = "5px";
-              editBtn.style.backgroundColor = "#ffa500"; // Amarillo
+              editBtn.style.backgroundColor = "#ffa500";
               editBtn.style.border = "none";
               editBtn.style.borderRadius = "4px";
               editBtn.style.cursor = "pointer";
               editBtn.addEventListener("click", () => {
                 const editArea = document.createElement("textarea");
                 editArea.value = comment.description;
-                // Puedes agregarle una clase para que herede estilos de textarea (ver CSS)
                 editArea.classList.add("comment-edit-textarea");
                 const saveBtn = document.createElement("button");
                 saveBtn.textContent = "Guardar";
                 saveBtn.style.fontSize = "0.9em";
                 saveBtn.style.padding = "8px 12px";
-                saveBtn.style.backgroundColor = "#4CAF50"; // Verde
+                saveBtn.style.backgroundColor = "#4CAF50";
                 saveBtn.style.border = "none";
                 saveBtn.style.borderRadius = "4px";
                 saveBtn.style.cursor = "pointer";
                 saveBtn.addEventListener("click", async () => {
                   try {
-                    const res = await fetch(`${baseUrl}/news/news/comments/${comment.id}`, {
+                    const res = await fetch(`${baseUrl}/news/comments/${comment.id}`, {
                       method: "PUT",
-                      headers: {"Content-Type": "application/json"},
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                      },
                       body: JSON.stringify({ description: editArea.value })
                     });
                     const result = await res.json();
                     if (result.message) { loadComments(postId); }
                   } catch (err) { console.error(err); }
                 });
-                // Reemplaza el contenido del comentario por el editor
                 commentDiv.innerHTML = "";
                 commentDiv.appendChild(editArea);
                 commentDiv.appendChild(saveBtn);
               });
               
-              // Botón eliminar: fondo rojo
               const deleteBtn = document.createElement("button");
               deleteBtn.textContent = "Eliminar";
               deleteBtn.style.fontSize = "0.9em";
               deleteBtn.style.padding = "8px 12px";
-              deleteBtn.style.backgroundColor = "#F44336"; // Rojo
+              deleteBtn.style.backgroundColor = "#F44336";
               deleteBtn.style.border = "none";
               deleteBtn.style.borderRadius = "4px";
               deleteBtn.style.cursor = "pointer";
               deleteBtn.addEventListener("click", async () => {
                 if (confirm("¿Estás seguro de eliminar este comentario?")) {
                   try {
-                    const res = await fetch(`${baseUrl}/news/news/comments/${comment.id}`, {
+                    const res = await fetch(`${baseUrl}/news/comments/${comment.id}`, {
                       method: "DELETE",
-                      headers: {"Content-Type": "application/json"}
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                      }
                     });
                     const result = await res.json();
                     if (result.message) { loadComments(postId); }
@@ -364,27 +363,138 @@
           console.error("Error cargando comentarios:", error);
         }
       }
-      // Publica un nuevo comentario
+
       async function postComment(postId) {
         const commentText = document.getElementById("modalNewComment").value;
-        if (!commentText.trim()) return;
+        const submitBtn = document.getElementById("modalPostCommentBtn");
+        
+        // Validaciones del lado del cliente
+        if (!commentText.trim()) {
+          alert("El comentario no puede estar vacío");
+          return;
+        }
+        
+        if (commentText.trim().length < 3) {
+          alert("El comentario debe tener al menos 3 caracteres");
+          return;
+        }
+        
+        if (commentText.length > 500) {
+          alert("El comentario no puede exceder 500 caracteres");
+          return;
+        }
+        
+        // Deshabilitar botón para prevenir múltiples envíos
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Publicando...";
+        
         try {
-          const res = await fetch(`${baseUrl}/news/news/posts/${postId}/comments`, {
+          const res = await fetch(`${baseUrl}/news/posts/${postId}/comments`, {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ user_id: Number(userId), description: commentText })
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ user_id: Number(userId), description: commentText.trim() })
           });
+          
           const result = await res.json();
-          if (result.message) {
+          
+          if (res.ok && result.message) {
             document.getElementById("modalNewComment").value = "";
             loadComments(postId);
+            
+            // Mostrar mensaje de éxito
+            showSuccessMessage("Comentario publicado exitosamente");
+            
+            // Cooldown visual - deshabilitar por 30 segundos
+            startCommentCooldown(submitBtn);
+          } else {
+            // Mostrar error específico
+            alert(result.error || "Error al publicar el comentario");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Publicar comentario";
           }
         } catch (error) {
           console.error("Error publicando comentario:", error);
+          alert("Error de conexión. Intenta nuevamente.");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Publicar comentario";
         }
       }
+      
+      // Función para mostrar cooldown visual
+      function startCommentCooldown(button) {
+        let countdown = 30;
+        button.disabled = true;
+        
+        const interval = setInterval(() => {
+          button.textContent = `Espera ${countdown}s`;
+          countdown--;
+          
+          if (countdown < 0) {
+            clearInterval(interval);
+            button.disabled = false;
+            button.textContent = "Publicar comentario";
+          }
+        }, 1000);
+      }
+      
+      // Función para mostrar mensajes de éxito
+      function showSuccessMessage(message) {
+        const successDiv = document.createElement("div");
+        successDiv.style.cssText = `
+          position: fixed;
+          top: 100px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: #d4edda;
+          color: #155724;
+          padding: 10px 20px;
+          border: 1px solid #c3e6cb;
+          border-radius: 5px;
+          z-index: 3000;
+          font-family: 'Press Start 2P', cursive;
+          font-size: 0.7em;
+        `;
+        successDiv.textContent = message;
+        
+        document.body.appendChild(successDiv);
+        
+        setTimeout(() => {
+          successDiv.remove();
+        }, 3000);
+      }
+      
+      // Contador de caracteres para el textarea
+      const modalNewComment = document.getElementById("modalNewComment");
+      if (modalNewComment) {
+        // Crear contador de caracteres
+        const charCounter = document.createElement("div");
+        charCounter.style.cssText = `
+          font-size: 0.7em;
+          color: #ffcb05;
+          text-align: right;
+          margin-top: 5px;
+          font-family: 'Press Start 2P', cursive;
+        `;
+        charCounter.textContent = "0/500";
+        modalNewComment.parentNode.insertBefore(charCounter, modalNewComment.nextSibling);
+        
+        modalNewComment.addEventListener("input", function() {
+          const length = this.value.length;
+          charCounter.textContent = `${length}/500`;
+          
+          if (length > 500) {
+            charCounter.style.color = "#ff5722";
+          } else if (length > 400) {
+            charCounter.style.color = "#ffa500";
+          } else {
+            charCounter.style.color = "#ffcb05";
+          }
+        });
+      }
 
-      // Eventos para abrir el modal al hacer click en "Ver comentarios"
       document.querySelectorAll(".toggle-comments-btn").forEach(button => {
         button.addEventListener("click", function() {
           const postId = this.closest(".main-card").dataset.postId;
@@ -392,12 +502,12 @@
           openCommentsModal(postId);
         });
       });
-      // Evento para publicar un comentario desde el modal
+
       document.getElementById("modalPostCommentBtn").addEventListener("click", function() {
         const postId = document.getElementById("commentsModal").dataset.postId;
         postComment(postId);
       });
-      // Evento para cerrar el modal de comentarios
+
       document.getElementById("modalCloseBtn").addEventListener("click", closeCommentsModal);
     });
   </script>

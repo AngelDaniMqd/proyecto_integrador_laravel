@@ -229,7 +229,7 @@ body {
     font-size: 0.9em;
 }
 .comment-item small {
-    font-size: 0.7em;
+    font-size: 0.6em; /* Ajusta este valor según lo pequeño que desees */
     color: #ccc;
 }
 
@@ -682,4 +682,65 @@ small.text-danger {
   background-color: #f5f5f5;
   color: #333;
   margin-bottom: 10px;
+}
+
+/* Estilos para anti-spam */
+.comment-cooldown {
+    background-color: #6c757d !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+}
+
+.comment-cooldown:hover {
+    background-color: #6c757d !important;
+    transform: none !important;
+}
+
+.comment-textarea-error {
+    border-color: #ff5722 !important;
+    background-color: rgba(255, 87, 34, 0.1) !important;
+}
+
+.char-counter {
+    font-size: 0.7em;
+    color: #ffcb05;
+    text-align: right;
+    margin-top: 5px;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.char-counter.warning {
+    color: #ffa500;
+}
+
+.char-counter.danger {
+    color: #ff5722;
+}
+
+/* Mensaje de éxito flotante */
+.success-message {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px 20px;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    z-index: 3000;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.7em;
+    animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }

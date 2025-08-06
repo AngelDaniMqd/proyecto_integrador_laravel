@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use App\Http\Requests\validadorCrear;
+use Illuminate\Support\Facades\Hash;
 
 class crearcuentaController extends Controller
 {
@@ -14,9 +13,7 @@ class crearcuentaController extends Controller
      */
     public function index()
     {
-        // Cambiar de 'usuarios' a 'tbusers'
-        $consultaCuentas = DB::table('tbusers')->get();
-        return view('CrearCuenta', compact('consultaCuentas'));
+        return view('CrearCuenta');
     }
 
     /**
@@ -30,55 +27,55 @@ class crearcuentaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(validadorCrear $request)
+    public function store(Request $request)
     {
+        // Validar los datos de entrada
         $request->validate([
-            'email' => 'required|email|unique:tbusers,email',
-            'username' => 'required|unique:tbusers,username',
+            'username' => 'required|string|min:3|max:50',
+            'email' => 'required|email',
+            'password' => 'required|string|min:6',
+            'confirm_password' => 'required|string|same:password',
         ]);
 
-        DB::table('tbusers')->insert([
-            "username" => $request->input('username'),
-            "email" => $request->input('email'),
-            "password" => bcrypt($request->input('password')),
-            "role_id" => 2,
-            "created_at" => Carbon::now(),
-            "updated_at" => Carbon::now()
-        ]);
+        try {
+            // Verificar si el usuario ya existe en tbusers
+            $existingUser = DB::table('tbusers')
+                ->where('username', $request->username)
+                ->orWhere('email', $request->email)
+                ->first();
 
-        return redirect()->route('rutaCrear')->with('exito', 'Usuario creado correctamente.');
-    }
+            if ($existingUser) {
+                if ($existingUser->username === $request->username) {
+                    return redirect()->route('rutaCrear')->with('error', 'El nombre de usuario ya está en uso');
+                } else {
+                    return redirect()->route('rutaCrear')->with('error', 'El email ya está registrado');
+                }
+            }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+            // Crear nuevo usuario en tbusers
+            $userId = DB::table('tbusers')->insertGetId([
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+            if ($userId) {
+                // Crear sesión automáticamente después del registro
+                session([
+                    'logged_in' => true,
+                    'user_id' => $userId,
+                    'username' => $request->username,
+                    'email' => $request->email
+                ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
+                return redirect()->route('rutaInicio')->with('message', 'Cuenta creada exitosamente. ¡Bienvenido!');
+            } else {
+                return redirect()->route('rutaCrear')->with('error', 'Error al crear la cuenta');
+            }
+        } catch (\Exception $e) {
+            return redirect()->route('rutaCrear')->with('error', 'Error en el servidor: ' . $e->getMessage());
+        }
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-    
 }
