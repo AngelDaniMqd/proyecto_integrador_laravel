@@ -11,7 +11,7 @@ COPY resources/ ./resources/
 COPY public/ ./public/
 COPY . .
 
-# Build simplificado (sin verificaciones que fallan)
+# Build de assets
 ENV NODE_ENV=production
 RUN npm run build
 
@@ -43,13 +43,27 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Configurar Apache (método simplificado)
+# Configurar Apache
 RUN a2enmod rewrite headers
+
+# Apache config mejorado
 RUN echo '<VirtualHost *:80>' > /etc/apache2/sites-available/000-default.conf && \
+    echo '    ServerName localhost' >> /etc/apache2/sites-available/000-default.conf && \
     echo '    DocumentRoot /var/www/html/public' >> /etc/apache2/sites-available/000-default.conf && \
-    echo '    <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    ErrorLog ${APACHE_LOG_DIR}/error.log' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    CustomLog ${APACHE_LOG_DIR}/access.log combined' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    <Directory /var/www/html>' >> /etc/apache2/sites-available/000-default.conf && \
     echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf && \
     echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    </Directory>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '    <Directory /var/www/html/public>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        AllowOverride All' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        Options Indexes FollowSymLinks' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        Require all granted' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        RewriteEngine On' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        RewriteCond %{REQUEST_FILENAME} !-f' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        RewriteCond %{REQUEST_FILENAME} !-d' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '        RewriteRule ^(.*)$ index.php [QSA,L]' >> /etc/apache2/sites-available/000-default.conf && \
     echo '    </Directory>' >> /etc/apache2/sites-available/000-default.conf && \
     echo '</VirtualHost>' >> /etc/apache2/sites-available/000-default.conf
 
@@ -67,22 +81,30 @@ COPY --from=node-builder /app/public/build ./public/build
 
 RUN composer dump-autoload --optimize
 
-# Permisos
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/public \
-    && chmod -R 777 /var/www/html/storage \
-    && chmod -R 777 /var/www/html/bootstrap/cache
+# Crear directorios y permisos ANTES del script
+RUN mkdir -p /var/www/html/storage/{logs,framework/{cache,sessions,views},app/public} && \
+    mkdir -p /var/www/html/bootstrap/cache && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html && \
+    chmod -R 777 /var/www/html/storage && \
+    chmod -R 777 /var/www/html/bootstrap/cache
 
-# Script de inicio simplificado
+# Script de inicio con debug mejorado
 RUN echo '#!/bin/bash' > /usr/local/bin/start.sh && \
     echo 'set -e' >> /usr/local/bin/start.sh && \
-    echo 'mkdir -p /var/www/html/storage/{logs,framework/{cache,sessions,views},app/public}' >> /usr/local/bin/start.sh && \
-    echo 'mkdir -p /var/www/html/bootstrap/cache' >> /usr/local/bin/start.sh && \
+    echo 'echo "=== INICIANDO SUSTAINITY PI ==="' >> /usr/local/bin/start.sh && \
+    echo 'echo "PHP Version: $(php --version | head -1)"' >> /usr/local/bin/start.sh && \
+    echo 'echo "Laravel Version: $(php artisan --version 2>/dev/null || echo \"Laravel check failed\")"' >> /usr/local/bin/start.sh && \
+    echo 'echo "Checking key..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan key:generate --force 2>/dev/null || echo "Key generation failed"' >> /usr/local/bin/start.sh && \
+    echo 'echo "Checking database connection..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan migrate:status 2>/dev/null || echo "DB connection failed"' >> /usr/local/bin/start.sh && \
+    echo 'echo "Creating storage link..."' >> /usr/local/bin/start.sh && \
+    echo 'php artisan storage:link --force 2>/dev/null || echo "Storage link failed"' >> /usr/local/bin/start.sh && \
+    echo 'echo "Final permission check..."' >> /usr/local/bin/start.sh && \
     echo 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache' >> /usr/local/bin/start.sh && \
-    echo 'chmod -R 777 /var/www/html/storage' >> /usr/local/bin/start.sh && \
-    echo 'chmod -R 777 /var/www/html/bootstrap/cache' >> /usr/local/bin/start.sh && \
-    echo 'chmod -R 755 /var/www/html/public' >> /usr/local/bin/start.sh && \
-    echo 'php artisan storage:link --force 2>/dev/null || echo "Storage link OK"' >> /usr/local/bin/start.sh && \
+    echo 'chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache' >> /usr/local/bin/start.sh && \
+    echo 'echo "=== STARTING APACHE ==="' >> /usr/local/bin/start.sh && \
     echo 'apache2-foreground' >> /usr/local/bin/start.sh
 
 RUN chmod +x /usr/local/bin/start.sh
