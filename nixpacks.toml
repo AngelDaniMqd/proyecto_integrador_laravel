@@ -1,0 +1,29 @@
+[variables]
+PHP_VERSION = "8.2"
+
+[phases.setup]
+# paquetes del sistema y Node.js para Vite
+packages = ["zlib-dev","libzip-dev","curl","git","nodejs","npm"]
+buildPackages = ["composer"]
+
+[phases.build]
+cmds = [
+  # instala dependencias PHP
+  "composer install --no-dev --optimize-autoloader --no-interaction",
+  # instala dependencias JS
+  "npm ci",
+  # genera los assets de Vite en public/build
+  "npm run build"
+]
+
+[phases.deploy]
+cmds = [
+  # migraciones y caches
+  "php artisan migrate --force",
+  "php artisan config:cache",
+  "php artisan route:cache",
+  "php artisan view:cache"
+]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
