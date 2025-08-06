@@ -1,25 +1,27 @@
 # Multi-stage build para optimizar el tamaño final
-# 1) Build de assets con Node
+# 1) Stage de Node: compila Vite
 FROM node:18-alpine AS node-builder
 WORKDIR /app
+
+# Copia package.json, lock y config de vite
 COPY package*.json vite.config.js ./
+
+# Instala dependencias y compila
 RUN npm ci
 COPY resources/ resources/
-COPY public/ public/
 RUN npm run build
 
-# 2) Imagen final con PHP 8.2 + Apache
+# 2) Stage PHP+Apache
 FROM php:8.2-apache
 
-# Instala extensiones PHP y Node.js
+# Instala extensiones PHP necesarias
 RUN apt-get update && apt-get install -y \
     libzip-dev zlib1g-dev libpng-dev libonig-dev zip unzip git curl \
-    nodejs npm \
   && docker-php-ext-install pdo_mysql mbstring bcmath zip exif pcntl gd \
   && a2enmod rewrite \
   && rm -rf /var/lib/apt/lists/*
 
-# Configurar Apache para Laravel
+# Configura Apache para apuntar al public de Laravel
 RUN echo '<VirtualHost *:80>\n\
     DocumentRoot /var/www/html/public\n\
     <Directory /var/www/html/public>\n\
@@ -29,30 +31,30 @@ RUN echo '<VirtualHost *:80>\n\
     </Directory>\n\
     ErrorLog ${APACHE_LOG_DIR}/error.log\n\
     CustomLog ${APACHE_LOG_DIR}/access.log combined\n\
-</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+</VirtualHost>' \
+ > /etc/apache2/sites-available/000-default.conf
 
 # Instala Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar código
+# Copia todo el código, incluido artisan y package.json
 COPY . .
 
-# Instalar dependencias PHP
+# Instala dependencias PHP (artisan ya existe)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Instalar dependencias JS y compilar assets
-RUN npm ci && npm run build
+# Copia los assets compilados desde node-builder
+COPY --from=node-builder /app/public/build public/build
 
-# Verificar que manifest.json existe
-RUN ls -la public/build/ || echo "No build directory found"
-
-# Permisos correctos
+# Ajusta permisos
 RUN chown -R www-data:www-data /var/www/html \
-  && chmod -R 755 /var/www/html \
-  && chmod -R 775 storage bootstrap/cache
+  && find storage bootstrap/cache -type d -exec chmod 775 {} \; \
+  && find storage bootstrap/cache -type f -exec chmod 664 {} \;
 
+# Expóne el puerto HTTP
 EXPOSE 80
 
-CMD ["bash", "-c", "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && apache2-foreground"]
+# Migra, cachea y arranca Apache
+CMD ["bash","-lc","php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && apache2-foreground"]
