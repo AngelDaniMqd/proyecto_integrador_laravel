@@ -58,7 +58,7 @@ Route::post('/CrearCuenta', [ControladorVistas::class, 'creartuCuenta'])->name('
 /* Route::post('/enviarInfo', [ControladorVistas::class, 'procesoInfo'])->name('rutaInfo'); */
 
 /* Rutas para donativoController */
-Route::get('/donativos/create', [donativoController::class, 'create'])->name('rutaDonativos');
+Route::get('/donativos/create', [donativoController::class, 'create'])->name('rutaDonativosCreate');
 Route::post('/donativos', [donativoController::class, 'store'])->name('rutaDonar');
 Route::get('/donativos', [donativoController::class, 'index'])->name('enviarDonativo');
 
